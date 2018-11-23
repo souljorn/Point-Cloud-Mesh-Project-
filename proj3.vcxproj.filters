@@ -1,0 +1,144 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="Geometry.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="utilities.cpp" />
+    <ClCompile Include="VertexObj.cpp" />
+    <ClCompile Include="Libraries\imgui\imgui.cpp">
+      <Filter>Libraries</Filter>
+    </ClCompile>
+    <ClCompile Include="Libraries\imgui\imgui_demo.cpp">
+      <Filter>Libraries</Filter>
+    </ClCompile>
+    <ClCompile Include="Libraries\imgui\imgui_draw.cpp">
+      <Filter>Libraries</Filter>
+    </ClCompile>
+    <ClCompile Include="Libraries\imgui\imgui_widgets.cpp">
+      <Filter>Libraries</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\imgui\imgui_impl_glfw.cpp">
+      <Filter>Libraries</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\imgui\imgui_impl_opengl3.cpp">
+      <Filter>Libraries</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\tiny_obj_loader.cc">
+      <Filter>Libraries</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Camera.h" />
+    <ClInclude Include="Geometry.h" />
+    <ClInclude Include="Shader.h" />
+    <ClInclude Include="stglew.h" />
+    <ClInclude Include="utilities.h" />
+    <ClInclude Include="VertexObj.h" />
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="colors.h" />
+    <ClInclude Include="Libraries\imgui\imconfig.h">
+      <Filter>Libraries</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\imgui\imgui.h">
+      <Filter>Libraries</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\imgui\imgui_internal.h">
+      <Filter>Libraries</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\imgui\imstb_rectpack.h">
+      <Filter>Libraries</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\imgui\imstb_textedit.h">
+      <Filter>Libraries</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\imgui\imstb_truetype.h">
+      <Filter>Libraries</Filter>
+    </ClInclude>
+    <ClInclude Include="libraries\imgui\imgui_impl_glfw.h">
+      <Filter>Libraries</Filter>
+    </ClInclude>
+    <ClInclude Include="libraries\imgui\imgui_impl_opengl3.h">
+      <Filter>Libraries</Filter>
+    </ClInclude>
+    <ClInclude Include="Mesh.h" />
+    <ClInclude Include="davidmagic.h" />
+    <ClInclude Include="libraries\tiny_obj_loader.h">
+      <Filter>Libraries</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="kernels\phong.frag" />
+    <None Include="Shaders\environment.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\environment.vert">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\reflection.vert">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\reflection.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\basic.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\basic.vert">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="PointClouds\face.xyz">
+      <Filter>PointClouds</Filter>
+    </None>
+    <None Include="PointClouds\pills.xyz">
+      <Filter>PointClouds</Filter>
+    </None>
+    <None Include="PointClouds\red_pepper.xyz">
+      <Filter>PointClouds</Filter>
+    </None>
+    <None Include="PointClouds\tigerfighter.xyz">
+      <Filter>PointClouds</Filter>
+    </None>
+    <None Include="PointClouds\face.obj">
+      <Filter>PointClouds</Filter>
+    </None>
+    <None Include="PointClouds\face_reduced.obj">
+      <Filter>PointClouds</Filter>
+    </None>
+    <None Include="PointClouds\pills.obj">
+      <Filter>PointClouds</Filter>
+    </None>
+    <None Include="PointClouds\red_pepper.obj">
+      <Filter>PointClouds</Filter>
+    </None>
+    <None Include="PointClouds\tigerfighter.obj">
+      <Filter>PointClouds</Filter>
+    </None>
+    <None Include="PointClouds\xy.obj">
+      <Filter>PointClouds</Filter>
+    </None>
+    <None Include="PointClouds\xy_nearly.obj">
+      <Filter>PointClouds</Filter>
+    </None>
+    <None Include="Shaders\point.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\point.vert">
+      <Filter>Shaders</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Shaders">
+      <UniqueIdentifier>{776594d0-da3f-49e9-9f3f-90e14f672270}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries">
+      <UniqueIdentifier>{447d772a-27d0-455e-a00f-e06857240b29}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="PointClouds">
+      <UniqueIdentifier>{e1a710c0-435b-47c8-96ac-bc6b8b59cd4e}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="proj3.rc" />
+  </ItemGroup>
+</Project>
