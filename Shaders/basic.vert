@@ -10,7 +10,7 @@ out vec4 outcolor;
 
 void main()
 {
-outcolor = color;
+outcolor = vec4(color.x, color.y, alpha, color.a);
 gl_Position = projection * view * model * vec4(position, 1.0);
 //gl_Position = vec4(position.x,position.y, position.z, 1.0);
 }

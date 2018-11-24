@@ -174,7 +174,6 @@ public:
 	{
 
 		m_VAO = VAO;
-		GLCall(glGenVertexArrays(1, &m_VAO));
 		glGenBuffers(1, &m_vbo_vertices);
 		glBindBuffer(GL_ARRAY_BUFFER, m_vbo_vertices);
 		glBufferData(GL_ARRAY_BUFFER, getNumVertices() * 7 * sizeof(float), &vertices.front(), GL_STATIC_DRAW);
@@ -197,35 +196,36 @@ public:
 		GLCall(glBindVertexArray(0));
 	}
 
-	void drawLines(GLint position, GLint colorIndex, unsigned int startingIndex)
+	void createBuffersPointsGroups(GLuint VAO)
 	{
-		GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_vbo_indices));
-		GLCall(glBindVertexArray(m_VAO));
-		GLCall(glDrawElements(GL_LINES, indices.size() * 2, GL_UNSIGNED_INT, 0));
-		//GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+
+		m_VAO = VAO;
+		glGenBuffers(1, &m_vbo_vertices);
+		glBindBuffer(GL_ARRAY_BUFFER, m_vbo_vertices);
+		glBufferData(GL_ARRAY_BUFFER, getNumVertices() * 7 * sizeof(float), &vertices.front(), GL_STATIC_DRAW);
+
+		glGenBuffers(1, &m_vbo_indices);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_vbo_indices);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, getNumIndices() * sizeof(unsigned int), &indices.front(), GL_STATIC_DRAW);
+
+		glBindVertexArray(m_VAO);
+		glBindBuffer(GL_ARRAY_BUFFER, m_vbo_vertices);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_vbo_indices);
+
+		GLCall(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)0));
+		GLCall(glEnableVertexAttribArray(0));
+
+		GLCall(glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)(3 * sizeof(float))));
+		GLCall(glEnableVertexAttribArray(1));
+
+		GLCall(glBindBuffer(GL_ARRAY_BUFFER, 0));
 		GLCall(glBindVertexArray(0));
 	}
-
-	void drawLinesSequence(float time, int modFactor)
-	{
-		//Rendering sequenced
-		delay = static_cast<unsigned int>(find_Mod(time * 50, modFactor));
-		//std::cout << delay << std::endl;
-		//oldDelay != delay ? delay = delay + 1 : oldDelay = delay;
-		GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_vbo_indices));
-		GLCall(glBindVertexArray(m_VAO));
-		GLCall(glDrawElements(GL_LINES, delay, GL_UNSIGNED_INT, (void*)0));
-		
-		//GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
-		GLCall(glBindVertexArray(0));
-		
-	}
-
 
 	void createBufferPoints(GLuint VAO)
 	{
 		m_VAO = VAO;
-		GLCall(glGenVertexArrays(1, &m_VAO));
+
 		GLCall(glBindVertexArray(m_VAO));
 		GLCall(glGenBuffers(1, &m_vbo_vertices));
 		GLCall(glBindBuffer(GL_ARRAY_BUFFER, m_vbo_vertices));
@@ -239,7 +239,28 @@ public:
 
 		GLCall(glBindBuffer(GL_ARRAY_BUFFER, 0));
 		GLCall(glBindVertexArray(0));
-		glPointSize(4.0f);
+
+	}
+
+	void drawLines(GLint position, GLint colorIndex, unsigned int startingIndex)
+	{
+		GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_vbo_indices));
+		GLCall(glBindVertexArray(m_VAO));
+		GLCall(glDrawElements(GL_LINES, indices.size() * 2, GL_UNSIGNED_INT, 0));
+		GLCall(glBindVertexArray(0));
+	}
+
+	void drawLinesSequence(float time, int modFactor)
+	{
+		//Rendering sequenced
+		delay = static_cast<unsigned int>(find_Mod(time * 50, modFactor));
+		//std::cout << delay << std::endl;
+		//oldDelay != delay ? delay = delay + 1 : oldDelay = delay;
+		GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_vbo_indices));
+		GLCall(glBindVertexArray(m_VAO));
+		GLCall(glDrawElements(GL_LINES, delay, GL_UNSIGNED_INT, (void*)0));
+		GLCall(glBindVertexArray(0));
+		
 	}
 
 	void drawPoints()
@@ -247,6 +268,18 @@ public:
 		GLCall(glBindVertexArray(m_VAO));
 		GLCall(glDrawArrays(GL_POINTS, 0, getNumVertices()));
 		GLCall(glBindVertexArray(0));
+	}
+
+	void drawPointGroups(float time, int modFactor, std::vector<int> groupCount, int speed)
+	{
+		
+		delay = static_cast<unsigned int>(find_Mod(time * speed, modFactor));
+		
+		GLCall(glBindVertexArray(m_VAO));
+		GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_vbo_indices));
+		GLCall(glDrawElements(GL_POINTS, delay, GL_UNSIGNED_INT, (void*)0));
+		GLCall(glBindVertexArray(0));
+		
 	}
 
 	Faces setIndices(int a, int b, int c) {
@@ -328,6 +361,30 @@ public:
 		}
 	}
 
+	void createPointsIndices(std::vector<Vertex> &points, GLuint start, GLuint end, color color)
+	{
+		indices.push_back(getNumVertices());
+		for (auto point : points) {
+			vertices.push_back(Vertex(point, color));
+			//std::cout << "(" << vertices.back().x <<","<<
+				//vertices.back().y << "," <<vertices.back().z << ")" << std::endl;
+			indices.push_back(getNumVertices());
+		}
+		
+			
+		//std::cout << "(" << indices.back() << std::endl;
+		
+	}
+
+
+	void addPoints(std::vector<Vertex> points, color color)
+	{
+		int i = 0;
+		for (auto point : points) {
+			vertices.push_back(Vertex(point, color));
+		}
+	}
+
 	float distance1D(float x1, float x2)
 	{
 		return sqrt(pow((x2 - x1), 2));
@@ -345,7 +402,7 @@ public:
 				if (axis == Xaxis)
 					vertices.push_back(Vertex(0.0f, l + (i * offsetH), b + (j * offsetV), color));
 				else if (axis == Yaxis)
-					vertices.push_back(Vertex(l + (i * offsetH), 0.0f, b + (j * offsetV), color));
+					vertices.push_back(Vertex(l + (i * offsetH), -1.5f, b + (j * offsetV), color));
 				else if (axis == Zaxis)
 					vertices.push_back(Vertex(l + (i * offsetH), b + (j * offsetV), 0.0f, color));
 				//std::cout << "PointAdded:( " << vertices.back().x << " , " << vertices.back().y << " , " << vertices.back().z << " )" << std::endl;
@@ -452,5 +509,4 @@ public:
 		temp.z = z / length;
 		return temp;
 	}
-
 };

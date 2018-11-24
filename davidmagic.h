@@ -10,6 +10,8 @@
 
 // adjust verbosity for debugging
 //#define VERY_VERBOSE
+//#define DISPLAY_POINT_PLANES 0
+//#define OUTPUT_TO_FILE 0
 
 // tiny object loader
 #define TINYOBJLOADER_IMPLEMENTATIO
@@ -75,7 +77,7 @@ bool loadCloud(tinyobj::attrib_t& attrib, const std::string& filename)
 
 std::string getCloudPointFilename(std::string basePath = constants::cloudPointsBasePath)
 {
-	std::string filename = "face_reduced.obj";
+	std::string filename = "face.obj";
 	/*std::cout << "Please input cloud point filename: ";
 	std::cin >> filename;*/
 
@@ -436,14 +438,10 @@ OutData davidsmagic()
 {
 
 #ifdef OUTPUT_TO_FILE
-	std::ofstream out("out.txt");
+	std::ofstream out("./out.txt");
 	std::streambuf *coutbuf = std::cout.rdbuf(); //save old buf
 	std::cout.rdbuf(out.rdbuf()); //redirect std::cout to out.txt!
 #endif
-
-
-
-
 
 	/*
 	*	LOAD THE OBJ FILE
@@ -474,7 +472,7 @@ OutData davidsmagic()
 	*
 	*/
 
-	size_t nPoints = pcloud.vertices.size() / constants::dims;
+	size_t nPoints = pcloud.vertices.size()/ constants::dims;
 
 	std::cout << "Casting and adapting format on " << nPoints << " points..." << std::endl;
 
@@ -568,7 +566,7 @@ OutData davidsmagic()
 		std::cout << "The centroid is " << centroid.tostring(constants::psd) << std::endl;
 		std::cout << "And the normal is " << normal.tostring(constants::psd) << std::endl;
 		std::cout << "With tag index " << tagsCentroids[i] << std::endl << std::endl;
-#endif // DISPLAY_POINT_PLANES
+#endif  //DISPLAY_POINT_PLANES
 
 	}
 
@@ -699,6 +697,7 @@ OutData davidsmagic()
 	std::cout << "\n\nNormals after propagation:" << std::endl;
 	std::cout << normals.tostring(constants::psd) << std::endl;
 #endif // VERY_VERBOSE
+
 
 
 

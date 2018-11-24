@@ -22,13 +22,9 @@
 #include "./Libraries/imgui/imgui.h"
 #include "./Libraries/imgui/examples/imgui_impl_glfw.h"
 #include "./Libraries/imgui/examples/imgui_impl_opengl3.h"
+#include "davidmagic.h"// david's magic header
 
-
-// david's magic header
-#include "davidmagic.h"
-
-
-
+#define  NOMINMAX
 class Mesh;
 double find_Mod(double a, double b);
 //----------------------------------------------
@@ -60,13 +56,17 @@ Mesh * nearestNeighborMesh1;
 // Data Globals
 //----------------------------------------------
 bool showGui = false;
-float PointSize = 1.0;
+float PointSize = 3.0;
 int numLines;
 OutData data;
 std::vector<Vertex> normalsUnordered;
 std::vector<Vertex> queryPoints; 
 std::vector<std::vector<Vertex>> nearestNeighbor;
+std::vector<Vertex> centroidPoints;
+std::vector<int> tagData;
+std::vector<int> nearestNeighborCount;
 bool norm = false;
+int speed =1500;
 
 //----------------------------------------------
 // Shader ID's
@@ -142,71 +142,53 @@ void cleanUp()
 
 void parseData()
 {
-	alglib::ae_int_t * tag ;
-	int temp;
-	int cols;
-	int rows;
-	//for (auto d : data.kdTreeData) {
-	//	int i = std::addressof(d) - std::addressof(data.kdTreeData[0]);
-	//	std::cout << "For query point " << d.queryPoint.tostring(constants::psd) << " with kRadius " << data.kRadius << std::endl;
-	//	std::cout << "The neighborhood is the set " << d.neighbors.tostring(constants::psd) << std::endl;
-	//	std::cout << "The centroid is " << d.centroid.tostring(constants::psd) << std::endl;
-	//	std::cout << "And the normal is " << d.normal.tostring(constants::psd) << std::endl;
-	//	std::cout << "With tag index " << d.tagsCentroids[i] << std::endl << std::endl;
-
-	//	tag = d.tagsCentroids.getcontent();
-	//	 temp = *tag;
-	//}
-
 	double *norm;
 	double * qp;
-	for (int i = 0; i < data.nPoints ; i++) {
-		//int i = std::addressof(d) - std::addressof(data.kdTreeData[0]);
-		//std::cout << "For query point " << d.queryPoint.tostring(constants::psd) << " with kRadius " << data.kRadius << std::endl;
-		//std::cout << "The neighborhood is the set " << data.kdTreeData.at(i).neighbors.tostring(constants::psd) << std::endl;
-		//std::cout << "The centroid is " << d.centroid.tostring(constants::psd) << std::endl;
-		//std::cout << "And the normal is " << d.normal.tostring(constants::psd) << std::endl;
-		//std::cout << "With tag index " << d.tagsCentroids[i] << std::endl << std::endl;
+	double * centroid;
+	int * tag;
+	int rows;
+	int i= 0;
+	for (auto d : data.kdTreeData) {
 		
-		
-		//std::cout << "With tag index " << data.kdTreeData.at(i).tagsCentroids[i] << std::endl << std::endl;
-		//tag = data.kdTreeData.at(i).tagsCentroids.getcontent();
-		//temp = *tag;
-		//std::cout << "Centroid Tag:" << temp << std::endl;
-
-		//std::cout << "And the normal is " << data.kdTreeData.at(i).normal.tostring(constants::psd) << std::endl;
-		//long len = (long)data.kdTreeData.at(i).normal.length();
-		cols = data.kdTreeData.at(i).neighbors.cols();
-		rows = data.kdTreeData.at(i).neighbors.rows();
-		//std::cout << "Colums:"<<cols << "Rows:"<<rows << std::endl;
-
-		std::vector<Vertex> temp;
-		//std::cout << "nearest neighbor:" << std::endl;
-		for(int j = 0; j < rows; j++)
-		{
-			temp.push_back(Vertex(data.kdTreeData.at(i).neighbors[j][0], data.kdTreeData.at(i).neighbors[j][1], data.kdTreeData.at(i).neighbors[j][2], Red));
-			
-			//std::cout << "(" << data.kdTreeData.at(i).neighbors[j][0] << "," << data.kdTreeData.at(i).neighbors[j][1] << "," << data.kdTreeData.at(i).neighbors[j][2] << ") ,";
-		}
-		nearestNeighbor.push_back(temp);
-		//next = next + data.kdTreeData.at(i).neighbors.getstride();
-		//std::cout << std::endl;
-		norm = data.kdTreeData.at(i).normal.getcontent();
-		normalsUnordered.push_back(Vertex((float)norm[0], (float)norm[1], (float)norm[2], Violet));
-		
-		qp = data.kdTreeData.at(i).queryPoint.getcontent();
-		queryPoints.push_back(Vertex((float)qp[0], (float)qp[1], (float)qp[2], Violet));
+	/*	std::cout << "For query point " << d.queryPoint.tostring(constants::psd) << " with kRadius " << data.kRadius << std::endl;
+		std::cout << "The neighborhood is the set " << d.neighbors.tostring(constants::psd) << std::endl;
+		std::cout << "The centroid is " << d.centroid.tostring(constants::psd) << std::endl;
+		std::cout << "And the normal is " << d.normal.tostring(constants::psd) << std::endl;
+		std::cout << "With tag index " << d.tagsCentroids[i] << std::endl << std::endl;
+		i++;*/
 	}
 
-	
+	for (int i = 0; i < data.nPoints ; i++) {
+		
+		//Nearest Neighbor
+		rows = data.kdTreeData.at(i).neighbors.rows();
+		std::vector<Vertex> temp;
+		for(int j = 0; j < rows; j++)
+		{
+			temp.push_back(Vertex(data.kdTreeData.at(i).neighbors[j][0],
+				data.kdTreeData.at(i).neighbors[j][1], data.kdTreeData.at(i).neighbors[j][2], Red));			
+		}
+		//Nerest neighbor points and group size
+		nearestNeighbor.push_back(temp);
+		nearestNeighborCount.push_back(rows);
 
-	// all three pointers point to the same location
-	//double *b_row0 = &b[0][0];
-	//double *b_row0_2 = &b(0, 0);
-	//double *b_row0_3 = b[0];
+		//Get norms
+		norm = data.kdTreeData.at(i).normal.getcontent();
+		normalsUnordered.push_back(Vertex((float)norm[0], (float)norm[1], (float)norm[2], Violet));
 
-	// advancing to the next row of 2-dimensional array
-	//double *b_row1 = b_row0 + b.getstride();
+		//Query Points
+		qp = data.kdTreeData.at(i).queryPoint.getcontent();
+		queryPoints.push_back(Vertex((float)qp[0], (float)qp[1], (float)qp[2], Violet));
+
+		//Centroid
+		centroid = data.kdTreeData.at(i).centroid.getcontent();
+		centroidPoints.push_back(Vertex(centroid[0], centroid[1], centroid[2], Orange));
+
+		//CentroidTag
+		tag = data.kdTreeData.at(i).tagsCentroids.getcontent();
+		tagData.push_back(tag[0]);
+		
+	}
 }
 
 //----------------------------------------------
@@ -214,6 +196,10 @@ void parseData()
 //----------------------------------------------
 void init()
 {
+	//Intialize all the VAOS
+	GLCall(glGenVertexArrays(NumVAOs, VAOs))
+	//Create Colors Vector
+	create_colors();
 	parseData();
 	//-----Open GL Options---------
 	glEnable(GL_DEPTH_TEST);
@@ -244,13 +230,11 @@ void init()
 	GLCall(cameraIDPoint = glGetUniformLocation(pointShaderProgram->Program, "camera"));
 	GLCall(alphaBasic = glGetUniformLocation(pointShaderProgram->Program, "alpha"));
 
-
-
 	// Setup of buffers for the mesh objects
 	// ------------------------------------------------------------------
 
 	pointCloud = new Mesh();
-	pointCloud->createPointCloud("./PointClouds/face.obj");
+	pointCloud->createPointCloud("./PointClouds/xy.obj");
 	pointCloud->createBufferPoints(VAOs[PointCloud]);
 
 	square = new Mesh();
@@ -275,15 +259,27 @@ void init()
 	normalsUO->createBuffers(VAOs[NormalsUO]);
 
 	queryPointMesh = new Mesh();
-	queryPointMesh->createPoints(queryPoints, Azure);
+	queryPointMesh->createPoints(queryPoints, GhostWhite);
 	queryPointMesh->createBufferPoints(VAOs[QueryVao]);
 
 	nearestNeighborMesh = new Mesh();
-	nearestNeighborMesh->createPoints(nearestNeighbor.at(0), Red);
-	nearestNeighborMesh->createBufferPoints(VAOs[NearestNeighborVAO]);
-
+	int start = 0;
+	int end = 0;
+	for (int i = 0; i < nearestNeighbor.size(); i++) {
+		if (i == 0) {
+			start = 0;
+			end = nearestNeighborCount.at(i) - 1;
+		}
+		else {
+			start = end + 1;
+			end = start + nearestNeighborCount.at(i);
+		}
+		//printf("count:%d\n", nearestNeighborCount.at(i));
+		nearestNeighborMesh->createPointsIndices(nearestNeighbor.at(i), start, end, colors.at((i + 40) % 10));
+	}
 	
-
+	//printf("count:%d\n", nearestNeighborMesh->vertices.size());
+	nearestNeighborMesh->createBuffersPointsGroups(VAOs[NearestNeighborVAO]);
 }
 
 //----------------------------------------------
@@ -301,7 +297,7 @@ void display(int windowWidth, int windowHeight)
 	time = glfwGetTime();
 	 
 	//Clear the buffer
-	GLCall(glClearColor(0.8f, 0.8f, 0.8f, 1.0f));
+	GLCall(glClearColor(SlateGray.x, SlateGray.y, SlateGray.z, 1.0f));
 	GLCall(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 	
 	//-------------------------
@@ -324,13 +320,13 @@ void display(int windowWidth, int windowHeight)
 	glm::mat4 modelGrid = glm::mat4(1.0f);
 	modelGrid = glm::scale(modelGrid, glm::vec3(.05, .05, .05));
 	modelGrid = glm::translate(modelGrid, glm::vec3(0, 0, 0));
-	modelGrid = glm::rotate(modelGrid, 20.0f , glm::vec3(1, .2f, 0));
+	modelGrid = glm::rotate(modelGrid, time * 5, glm::vec3(0, 1.0f, 0.1f));
 
 	// Model matrix : an identity matrix (model will be at the origin)
 	glm::mat4 modelPoint = glm::mat4(1.0f);
 	modelPoint = glm::scale(modelPoint, glm::vec3(.05, .05, .05));
 	modelPoint = glm::translate(modelPoint, glm::vec3(0, 0, 0));
-	modelPoint = glm::rotate(modelPoint, 20.0f, glm::vec3(1, .2f, 0));
+	modelPoint = glm::rotate(modelPoint, time *5 , glm::vec3(0, 1.0f, 0.1f));
 
 	//-------------------------
 	//     Activate Shader
@@ -343,15 +339,16 @@ void display(int windowWidth, int windowHeight)
 	GLCall(glUniformMatrix4fv(modelIDBasic, 1, GL_FALSE, glm::value_ptr(modelGrid)));
 	GLCall(glUniformMatrix4fv(viewIDBasic, 1, GL_FALSE, glm::value_ptr(view)));
 	GLCall(glUniformMatrix4fv(projectionIDBasic, 1, GL_FALSE, glm::value_ptr(projection)));
-	GLCall(glUniform1f(alphaBasic, sin(time * 1)));
+	GLCall(glUniform1f(alphaBasic, sin(time * 2.0f) * 0.6f));
 	//gridLines->drawLinesSequence(time, gridLines->getNumIndices() + 1);
 	//grid->drawPoints();
 	xzPlane->drawLines(0, 0, 0);
 	if (norm) {
 		normalsUO->drawLines(0, 0, 0);
 	}
-	//queryPointMesh->drawPoints();
-	nearestNeighborMesh->drawPoints();
+	
+	nearestNeighborMesh->drawPointGroups(time, nearestNeighborMesh->indices.size(), nearestNeighborCount, speed);
+	
 	//nearestNeighborMesh1->drawPoints();
 
 
@@ -365,9 +362,10 @@ void display(int windowWidth, int windowHeight)
 	GLCall(glUniformMatrix4fv(modelIDPoint, 1, GL_FALSE, glm::value_ptr(modelPoint)));
 	GLCall(glUniformMatrix4fv(viewIDPoint, 1, GL_FALSE, glm::value_ptr(view)));
 	GLCall(glUniformMatrix4fv(projectionIDPoint, 1, GL_FALSE, glm::value_ptr(projection)));
-	
+	GLCall(glUniform1f(alphaBasic, ((sin(time * 150.0f) + 1) * .0005) + .995f));
+	std::cout << ((sin(time * 10.0f) + 1) * .0005) + .995f << std::endl;
 	//pointCloud->drawPoints();
-	
+	queryPointMesh->drawPoints();
 	//gridLines->drawLines(0, 0, 0);
 	
 	GLCall(glDepthFunc(GL_LESS));
@@ -392,36 +390,36 @@ void KeyCallback(GLFWwindow *window, int key, int scan, int act, int mode)
 
     if (key == GLFW_KEY_UP && act == GLFW_PRESS)
     {
-		camX +=0.1;
+		camX +=1.1;
 		std::cout << "camX:" << camX << std::endl;
     }
 
     if (key == GLFW_KEY_DOWN && act == GLFW_PRESS)
     {
-		camX -= 0.1;
+		camX -= 1.1;
 		std::cout << "camX:" << camX << std::endl;
     }
 
 	if (key == GLFW_KEY_LEFT && act == GLFW_PRESS)
 	{
-		camY += .1;
+		camY += 1.1;
 		std::cout << "camY:" << camY << std::endl;
 	}
     if (key == GLFW_KEY_RIGHT && act == GLFW_PRESS)
     {
-		camY -= .1;
+		camY -= 1.1;
 		std::cout << "camY:" << camY << std::endl;
     }
 
 	if (key == GLFW_KEY_1 && act == GLFW_PRESS)
 	{
-		camZ += .1;
+		camZ += 1.1;
 		std::cout << "camZ:" << camZ << std::endl;
 	}
 
 	if (key == GLFW_KEY_2 && act == GLFW_PRESS)
 	{
-		camZ -= .1;
+		camZ -= 1.1;
 		std::cout << "camZ:" << camZ << std::endl;
 	}
 	if (key == GLFW_KEY_3 && act == GLFW_PRESS)
@@ -462,6 +460,17 @@ void KeyCallback(GLFWwindow *window, int key, int scan, int act, int mode)
 	{
 		norm = !norm;
 		
+	}
+	if (key == GLFW_KEY_O && act == GLFW_PRESS)
+	{
+		speed -= 100; 
+		std::cout << "Speed:" << speed << std::endl;
+	}
+	if (key == GLFW_KEY_P && act == GLFW_PRESS)
+	{
+		speed += 100;
+		std::cout << "Speed:" << speed << std::endl;
+
 	}
 	
 
