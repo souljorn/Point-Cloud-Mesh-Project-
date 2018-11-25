@@ -10,6 +10,7 @@
 #include "Geometry.h"
 #include "colors.h"
 
+//Definition to get error codes from openGL
 #define BUFFER_OFFSET(a) ((void*)(a))
 #define ASSERT(x) if (!(x)) __debugbreak();
 #define GLCall(x) GLClearError();\
@@ -43,7 +44,7 @@ static bool GLLogCall(const char* function, const char* file, int line)
 }
 
 
-// CPP program to find modulo of floating  
+// Program to find modulo of floating  
 // point numbers. 
 double find_Mod(double a, double b)
 {
@@ -81,6 +82,7 @@ struct Vertex {
 	//default constructor
 	Vertex() {}
 
+	//x,y,z constructor default red 
 	Vertex(float x, float y, float z) {
 		this->x = x;
 		this->y = y;
@@ -90,7 +92,7 @@ struct Vertex {
 		this->b = DarkRed.b;
 		this->a = DarkRed.a;
 	}
-
+	//Constructor with separate variables for postition and colors
 	Vertex(float x, float y, float z, float r, float g, float b, float a) {
 		this->x = x;
 		this->y = y;
@@ -101,6 +103,7 @@ struct Vertex {
 		this->a = a;
 	}
 
+	//Constructor with float position and color
 	Vertex(float x, float y, float z, color color) {
 		this->x = x;
 		this->y = y;
@@ -110,6 +113,8 @@ struct Vertex {
 		this->b = color.b;
 		this->a = color.a;
 	}
+
+	//Constructor with Vertex and Color
 	Vertex(Vertex vert, color color) {
 		this->x = vert.x;
 		this->y = vert.y;
@@ -118,6 +123,32 @@ struct Vertex {
 		this->g = color.g;
 		this->b = color.b;
 		this->a = color.a;
+	}
+
+	void flipVertex()
+	{
+		this->x = -1 * this->x;
+		this->y = -1 * this->y;
+		this->z = -1 * this->z;
+	}
+
+	//Normalize Vectors
+	Vertex normalizeVertex(float x, float y, float z) {
+		float length = sqrtf(x * x + y * y + z * z);
+		Vertex temp;
+		temp.x = x / length;
+		temp.y = y / length;
+		temp.z = z / length;
+		return temp;
+	}
+
+	Vertex normalizeVertex(Vertex vector) {
+		float length = sqrtf(vector.x * vector.x + vector.y * vector.y + vector.z * vector.z);
+		Vertex temp;
+		temp.x = vector.x / length;
+		temp.y = vector.y / length;
+		temp.z = vector.z / length;
+		return temp;
 	}
 };
 
@@ -153,16 +184,19 @@ public:
 	GLuint                      m_VAO;
 	inline Mesh() {}
 
+	//Mesh creation with vertices and and faces
 	Mesh(std::vector<Vertex> vertices, std::vector<Faces> faces) {
 		this->vertices = vertices;
 		this->faces = faces;
 	}
 
+	//Constructor with vertices and indicies
 	Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices) {
 		this->vertices = vertices;
 		this->faces = faces;
 	}
 
+	//Destructor
 	~Mesh()
 	{
 		glDeleteBuffers(1, &m_VAO);
@@ -170,6 +204,7 @@ public:
 		glDeleteBuffers(1, &m_vbo_vertices);
 	}
 
+	//Create General Buffer for lines with indicies
 	void createBuffers(GLuint VAO)
 	{
 
@@ -196,9 +231,9 @@ public:
 		GLCall(glBindVertexArray(0));
 	}
 
+	//Create buffer for points with indicies
 	void createBuffersPointsGroups(GLuint VAO)
 	{
-
 		m_VAO = VAO;
 		glGenBuffers(1, &m_vbo_vertices);
 		glBindBuffer(GL_ARRAY_BUFFER, m_vbo_vertices);
@@ -222,6 +257,7 @@ public:
 		GLCall(glBindVertexArray(0));
 	}
 
+	//Create Buffer that does not need to index points
 	void createBufferPoints(GLuint VAO)
 	{
 		m_VAO = VAO;
@@ -242,6 +278,7 @@ public:
 
 	}
 
+	//Draw all lines in the mesh
 	void drawLines(GLint position, GLint colorIndex, unsigned int startingIndex)
 	{
 		GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_vbo_indices));
@@ -250,6 +287,7 @@ public:
 		GLCall(glBindVertexArray(0));
 	}
 
+	//Draw lines in sequence iterating through all lines in the mesh
 	void drawLinesSequence(float time, int modFactor)
 	{
 		//Rendering sequenced
@@ -263,6 +301,7 @@ public:
 		
 	}
 
+	//Draw all points in the mesh
 	void drawPoints()
 	{
 		GLCall(glBindVertexArray(m_VAO));
@@ -270,9 +309,13 @@ public:
 		GLCall(glBindVertexArray(0));
 	}
 
+	//Draw Points in a mesh in in a sequence
+	//time is passed from display funciton
+	//modfactor is the size of all the indicies so overflow does not occur, rolls over to the beginning of indices
+	//group count is a vector of number of points in each group of nearest neighbors 
+	//speed is how fast we animate contoled with the O/P key
 	void drawPointGroups(float time, int modFactor, std::vector<int> groupCount, int speed)
 	{
-		
 		delay = static_cast<unsigned int>(find_Mod(time * speed, modFactor));
 		
 		GLCall(glBindVertexArray(m_VAO));
@@ -282,16 +325,19 @@ public:
 		
 	}
 
+	//Set indices of faces
 	Faces setIndices(int a, int b, int c) {
 		Faces temp(a, b, c);
 		return temp;
 	}
 
+	//Set indices of lines
 	void setIndices(int a, int b) {
 		indices.push_back(a);
 		indices.push_back(b);
 	}
 
+	//Creation of a basic square
 	void createSquare() {
 		vertices.push_back(Vertex(0.1f, 0.0f, 0.0f, Yellow));
 		vertices.push_back(Vertex(0.0f, 0.0f, 0.0f, Orange));
@@ -303,6 +349,7 @@ public:
 		setIndices(3, 1);
 	}
 
+	//Creation of a point cloud mesh from a file default color
 	void createPointCloud(std::string filePath) {
 		Geometry * pointCloud = new Geometry();
 		pointCloud->Load(filePath);
@@ -319,11 +366,12 @@ public:
 		}
 	}
 
-	void createLine() {
+	//Creates a group of  ranndom lines
+	void createRandomLines(int num) {
 		srand(time(NULL));
 		int j;
 		float x, y, z, r, g, b;
-		for (int i = 0; i < 10; i++) {
+		for (int i = 0; i < num; i++) {
 			for (j = 0; j < 2; j++) {
 				x = (float)(rand() % 10) / 100.0;
 				y = (float)(rand() % 10) / 100.0;
@@ -341,18 +389,18 @@ public:
 		}
 	}
 
-	void createLines(std::vector<Vertex> origin, std::vector<Vertex> lines)
+	//Create Lines gives list of origin vertices and direction vector
+	void createLines(std::vector<Vertex> origin, std::vector<Vertex> direction)
 	{
-		
 		//vertices.push_back(Vertex(0.0f, 0.0f, 0.0f, BlueViolet));
 		for (int i = 0; i < origin.size(); i++) {
 			vertices.push_back(origin.at(i));
-			vertices.push_back(lines.at(i));
+			vertices.push_back(direction.at(i));
 			setIndices(2*i,2*i+1);
-	
 		}
 	}
 
+	//Create points with a vertex list and a color
 	void createPoints(std::vector<Vertex> points, color color)
 	{
 		int i = 0;
@@ -361,22 +409,20 @@ public:
 		}
 	}
 
+	//Create a collection of points with indices *Gives ability to only render portions of points
+	//Start and end were considered to be able to distinguish what indices belong to the nn-groups
+	//**To do create a pair solution to keep track to start and end indicies of each group
 	void createPointsIndices(std::vector<Vertex> &points, GLuint start, GLuint end, color color)
 	{
 		indices.push_back(getNumVertices());
 		for (auto point : points) {
 			vertices.push_back(Vertex(point, color));
-			//std::cout << "(" << vertices.back().x <<","<<
-				//vertices.back().y << "," <<vertices.back().z << ")" << std::endl;
 			indices.push_back(getNumVertices());
 		}
 		
-			
-		//std::cout << "(" << indices.back() << std::endl;
-		
 	}
 
-
+	//Add points with out indicies
 	void addPoints(std::vector<Vertex> points, color color)
 	{
 		int i = 0;
@@ -385,11 +431,14 @@ public:
 		}
 	}
 
+	//Get distance in one dimension
 	float distance1D(float x1, float x2)
 	{
 		return sqrt(pow((x2 - x1), 2));
 	}
 
+	//Create an X,Y, or Z aligned 2d grid with a certain amount of divisions, color
+	//Left, right and Top, Bottom determine position and size of grid
 	void createGrid(int divisions, float l, float r, float b, float t, int axis, color color)
 	{
 		float offsetH = distance1D(r,l) / divisions;
@@ -423,15 +472,14 @@ public:
 				setIndices(i + j * (divisions +1), i + (j + 1) * (divisions+1));
 			}
 		}
-
 		//Check value of indexes created
 		for (auto index : indices)
 		{
 			//std::cout << "Indices Added:(" << index << ")" << std::endl;
 		}
-
 	}
 
+	//Create an Icosphere of verticies and indices
 	void createIsoshpere() {
 		float pos = (1.0 + sqrtf(5.0)) / 2.0;
 
@@ -501,6 +549,7 @@ public:
 		return faces;
 	}
 
+	//Normalize Vectors
 	Vertex normalizeVertices(float x, float y, float z) {
 		float length = sqrtf(x * x + y * y + z * z);
 		Vertex temp;
@@ -508,5 +557,25 @@ public:
 		temp.y = y / length;
 		temp.z = z / length;
 		return temp;
+	}
+
+	Vertex normalizeVertices(Vertex vector) {
+		float length = sqrtf(vector.x * vector.x + vector.y * vector.y + vector.z * vector.z);
+		Vertex temp;
+		temp.x = vector.x / length;
+		temp.y = vector.y / length;
+		temp.z = vector.z / length;
+		return temp;
+	}
+
+	void flipVectors()
+	{	
+		for (auto vertex : vertices)
+		{
+			vertex.x = -1 * vertex.x;
+			vertex.y = -1 * vertex.y;
+			vertex.z = -1 * vertex.z;
+		}
+			
 	}
 };

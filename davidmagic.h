@@ -494,7 +494,7 @@ OutData davidsmagic()
 	*
 	*/
 
-	double kRadius = 0.3f;	// this should be a function of 
+	double kRadius = 0.2f;	// this should be a function of 
 							// the density and noise of the point cloud
 
 	outData.kRadius = kRadius;

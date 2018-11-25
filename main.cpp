@@ -24,7 +24,14 @@
 #include "./Libraries/imgui/examples/imgui_impl_opengl3.h"
 #include "davidmagic.h"// david's magic header
 
-#define  NOMINMAX
+/***********To Do************************
+ *Animate NN by point groups
+ *Animate normals by Centroid
+ *
+ *
+ *
+ ****************************************/
+
 class Mesh;
 double find_Mod(double a, double b);
 //----------------------------------------------
@@ -32,8 +39,10 @@ double find_Mod(double a, double b);
 //----------------------------------------------
 
 enum VAO_IDs { PointCloud, Lines, Grid, GridLines,
-	XYPlane, NormalsUO, QueryVao, NearestNeighborVAO, NumVAOs };
+	XYPlane, NormalsUO, QueryVao, NearestNeighborVAO, CentroidVAO, NumVAOs };
 GLuint  VAOs[NumVAOs];
+
+//Shader pointers
 Shader * basicShaderProgram = new Shader();
 Shader * pointShaderProgram = new Shader();
 
@@ -50,23 +59,34 @@ Mesh * normalsUO;
 Mesh * queryPointMesh;
 Mesh * nearestNeighborMesh;
 Mesh * nearestNeighborMesh1;
-
+Mesh * centroidMesh;
 
 //----------------------------------------------
 // Data Globals
 //----------------------------------------------
+
+//Shows gui when set to true
 bool showGui = false;
+
+//Variable to set point size through out the project
 float PointSize = 3.0;
 int numLines;
+
+//Data object from algorithm header
 OutData data;
+
+//Data structures to hold all the data from algorithm
 std::vector<Vertex> normalsUnordered;
 std::vector<Vertex> queryPoints; 
 std::vector<std::vector<Vertex>> nearestNeighbor;
 std::vector<Vertex> centroidPoints;
 std::vector<int> tagData;
 std::vector<int> nearestNeighborCount;
-bool norm = false;
-int speed =1500;
+
+bool norm = false;	//Norms on off boolean
+int speed = 1500; //Used to speed up the NN-Animation with the O/P key
+float nearPlane = .10f;
+float farPlane = 50.0f;
 
 //----------------------------------------------
 // Shader ID's
@@ -138,8 +158,15 @@ void cleanUp()
 	delete square;
 	delete gridLines;
 	delete xzPlane;
+	delete normalsUO;
+	delete queryPointMesh;
+	delete nearestNeighborMesh;
+	//delete nearestNeighborMesh1;
+	delete centroidMesh;
+	
 }
 
+//Parse Data from algorithm header
 void parseData()
 {
 	double *norm;
@@ -174,7 +201,13 @@ void parseData()
 
 		//Get norms
 		norm = data.kdTreeData.at(i).normal.getcontent();
-		normalsUnordered.push_back(Vertex((float)norm[0], (float)norm[1], (float)norm[2], Violet));
+		/*float x = norm[0];
+		float y = norm[1];
+		float z = norm[2];
+		std::cout << x << std::endl;
+		std::cout << y << std::endl;
+		std::cout << z << std::endl;*/
+		normalsUnordered.push_back(Vertex((float)norm[0] , (float)norm[1], (float)norm[2] , Violet));
 
 		//Query Points
 		qp = data.kdTreeData.at(i).queryPoint.getcontent();
@@ -187,7 +220,6 @@ void parseData()
 		//CentroidTag
 		tag = data.kdTreeData.at(i).tagsCentroids.getcontent();
 		tagData.push_back(tag[0]);
-		
 	}
 }
 
@@ -196,11 +228,16 @@ void parseData()
 //----------------------------------------------
 void init()
 {
-	//Intialize all the VAOS
-	GLCall(glGenVertexArrays(NumVAOs, VAOs))
-	//Create Colors Vector
+	//Generate all the VAOS
+	GLCall(glGenVertexArrays(NumVAOs, VAOs));
+	
+	//Create Colors Vector to be used to easily cycle through
+	//all the colors in colors.h
 	create_colors();
+
+	//Parse Data from Algorithm header file(davidmagic.h)
 	parseData();
+
 	//-----Open GL Options---------
 	glEnable(GL_DEPTH_TEST);
 	//glDisable(GL_DEPTH_TEST);
@@ -230,16 +267,18 @@ void init()
 	GLCall(cameraIDPoint = glGetUniformLocation(pointShaderProgram->Program, "camera"));
 	GLCall(alphaBasic = glGetUniformLocation(pointShaderProgram->Program, "alpha"));
 
-	// Setup of buffers for the mesh objects
+	// Setup up of vertices, indicies, and buffers for the mesh objects
 	// ------------------------------------------------------------------
 
+	//Create Point Cloud from file
 	pointCloud = new Mesh();
-	pointCloud->createPointCloud("./PointClouds/xy.obj");
-	pointCloud->createBufferPoints(VAOs[PointCloud]);
+	//pointCloud->createPointCloud("./PointClouds/xy.obj");
+	//pointCloud->createBufferPoints(VAOs[PointCloud]);
 
+	
 	square = new Mesh();
-	square->createSquare();
-	square->createBuffers(VAOs[Lines]);
+	//square->createPoints(normalsUnordered, Red);
+	//square->createBufferPoints(VAOs[Lines]);
 
 	grid = new Mesh();
 	grid->createGrid(4, .0f, 0.5f, 0.0f, 0.5f, Zaxis, Orange);
@@ -249,19 +288,44 @@ void init()
 	gridLines->createGrid(4, .0f, 0.5f, 0.0f, 0.5f, Zaxis, Blue);
 	gridLines->createBuffers(VAOs[GridLines]);
 
-	//x
+	//xz plane creation
 	xzPlane = new Mesh();
 	xzPlane->createGrid(16, -2.0f, 2.0f, -2.0f, 2.0f, Yaxis, DarkSlateGray);
 	xzPlane->createBuffers(VAOs[XYPlane]);
 
+	//Normal Mesh
 	normalsUO = new Mesh();
-	normalsUO->createLines(queryPoints,normalsUnordered);
+
+	//Shift the normals to the centroids
+	for (int i = 0; i < normalsUnordered.size(); i++) {
+	
+		/*std::cout << "Before:";
+		std::cout << "(" << vert.x;
+		std::cout << "," << vert.y;
+		std::cout << "," << vert.z;
+		std::cout << "," << std::endl;*/
+		
+		 normalsUnordered.at(i).x = normalsUnordered.at(i).x + centroidPoints.at(i).x;
+		 normalsUnordered.at(i).y = normalsUnordered.at(i).y + centroidPoints.at(i).y;
+		 normalsUnordered.at(i).z = normalsUnordered.at(i).z + centroidPoints.at(i).z;
+		
+		
+	/*	std::cout << "After:";
+		std::cout << "("<< vert.x;
+		std::cout << "," << vert.y;
+		std::cout << "," << vert.z;
+		std::cout << "," << std::endl;*/
+	}
+
+	normalsUO->createLines(centroidPoints, normalsUnordered);
 	normalsUO->createBuffers(VAOs[NormalsUO]);
 
+	//Query Point Mesh
 	queryPointMesh = new Mesh();
 	queryPointMesh->createPoints(queryPoints, GhostWhite);
 	queryPointMesh->createBufferPoints(VAOs[QueryVao]);
 
+	//Nearest Neighbor Mesh
 	nearestNeighborMesh = new Mesh();
 	int start = 0;
 	int end = 0;
@@ -277,9 +341,14 @@ void init()
 		//printf("count:%d\n", nearestNeighborCount.at(i));
 		nearestNeighborMesh->createPointsIndices(nearestNeighbor.at(i), start, end, colors.at((i + 40) % 10));
 	}
-	
 	//printf("count:%d\n", nearestNeighborMesh->vertices.size());
 	nearestNeighborMesh->createBuffersPointsGroups(VAOs[NearestNeighborVAO]);
+
+	//Create Centroid Mesh
+	centroidMesh = new Mesh();
+	centroidMesh->createPoints(centroidPoints, Orange);
+	centroidMesh->createBufferPoints(VAOs[CentroidVAO]);
+
 }
 
 //----------------------------------------------
@@ -287,8 +356,7 @@ void init()
 //-----------------------------------------------
 void display(int windowWidth, int windowHeight)
 {	
-	//// sets up the camera motion
-
+	//Camera variables (not used currently)
     float ratio = (float)windowHeight/windowWidth;
 	float degrees = (int)(80 * glfwGetTime()) % 360;
 
@@ -304,7 +372,7 @@ void display(int windowWidth, int windowHeight)
 	//     Matrix Update
 	//------------------------
 	// Projection matrix : 45° Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
-	glm::mat4 projection = glm::perspective(glm::radians(45.0f), static_cast<float>(windowLength) / static_cast<float>(windowHeight), .10f, 50.0f);
+	glm::mat4 projection = glm::perspective(glm::radians(45.0f), static_cast<float>(windowLength) / static_cast<float>(windowHeight), nearPlane, farPlane);
 
 	// Or, for an ortho camera :
 	//glm::mat4 Projection = glm::ortho(-10.0f,10.0f,-10.0f,10.0f,0.0f,100.0f); // In world coordinates
@@ -333,41 +401,37 @@ void display(int windowWidth, int windowHeight)
 	//------------------------
 	
 	basicShaderProgram->Use();
-	
-
 	//---------------Link Matrices to Basic Shader--------------------------------
 	GLCall(glUniformMatrix4fv(modelIDBasic, 1, GL_FALSE, glm::value_ptr(modelGrid)));
 	GLCall(glUniformMatrix4fv(viewIDBasic, 1, GL_FALSE, glm::value_ptr(view)));
 	GLCall(glUniformMatrix4fv(projectionIDBasic, 1, GL_FALSE, glm::value_ptr(projection)));
-	GLCall(glUniform1f(alphaBasic, sin(time * 2.0f) * 0.6f));
-	//gridLines->drawLinesSequence(time, gridLines->getNumIndices() + 1);
+	//GLCall(glUniform1f(alphaBasic, sin(time * 2.0f) * 0.6f));
+
+	//----------Mesh Draw Calls for The XY PLANE/NEAREST NEIGHBOR/CENTROID/NORMALS------------------------------------
+	gridLines->drawLinesSequence(time, gridLines->getNumIndices() + 1);
 	//grid->drawPoints();
 	xzPlane->drawLines(0, 0, 0);
+	//Turn Normals on/off with N key
 	if (norm) {
 		normalsUO->drawLines(0, 0, 0);
 	}
-	
 	nearestNeighborMesh->drawPointGroups(time, nearestNeighborMesh->indices.size(), nearestNeighborCount, speed);
+	centroidMesh->drawPoints();
 	
 	//nearestNeighborMesh1->drawPoints();
 
-
-
-	//----------Mesh Draw Calls------------------------------------
-	//square->drawLines(0, 0, 0);
-
-	//---------------Link Matrices to Basic Shader--------------------------------
+	//---------------Link Matrices to Point Shader--------------------------------
 	pointShaderProgram->Use();
-
 	GLCall(glUniformMatrix4fv(modelIDPoint, 1, GL_FALSE, glm::value_ptr(modelPoint)));
 	GLCall(glUniformMatrix4fv(viewIDPoint, 1, GL_FALSE, glm::value_ptr(view)));
 	GLCall(glUniformMatrix4fv(projectionIDPoint, 1, GL_FALSE, glm::value_ptr(projection)));
+	//Alpha is a float in the shader used to add jitter to the query points
 	GLCall(glUniform1f(alphaBasic, ((sin(time * 150.0f) + 1) * .0005) + .995f));
-	std::cout << ((sin(time * 10.0f) + 1) * .0005) + .995f << std::endl;
+
+	//----------Mesh Draw Calls for The Points------------------------------------
 	//pointCloud->drawPoints();
 	queryPointMesh->drawPoints();
 	//gridLines->drawLines(0, 0, 0);
-	
 	GLCall(glDepthFunc(GL_LESS));
 }
 
@@ -470,8 +534,28 @@ void KeyCallback(GLFWwindow *window, int key, int scan, int act, int mode)
 	{
 		speed += 100;
 		std::cout << "Speed:" << speed << std::endl;
-
 	}
+	if (key == GLFW_KEY_Q && act == GLFW_PRESS)
+	{
+		nearPlane -= .50f;
+		std::cout << "NearPlane:" << nearPlane << std::endl;
+	}
+	if (key == GLFW_KEY_W && act == GLFW_PRESS)
+	{
+		nearPlane += .50f;
+		std::cout << "NearPlane:" << nearPlane << std::endl;
+	}
+	if (key == GLFW_KEY_A && act == GLFW_PRESS)
+	{
+		farPlane -= 5.0f;
+		std::cout << "FarPlane:" << farPlane << std::endl;
+	}
+	if (key == GLFW_KEY_S && act == GLFW_PRESS)
+	{
+		farPlane += 5.0f;
+		std::cout << "FarPlane:" << farPlane << std::endl;
+	}
+
 	
 
     //updating keys table 
@@ -548,9 +632,6 @@ void KeyMovement()
     if (keys[GLFW_KEY_LEFT_CONTROL])
         camera.keyIn(DOWN, deltaTime * 3);
 }
-
-
-
 
 
 //----------------------------------------------------
