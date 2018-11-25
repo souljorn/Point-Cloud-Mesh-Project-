@@ -77,7 +77,7 @@ bool loadCloud(tinyobj::attrib_t& attrib, const std::string& filename)
 
 std::string getCloudPointFilename(std::string basePath = constants::cloudPointsBasePath)
 {
-	std::string filename = "face.obj";
+	std::string filename = "red_pepper_down.obj";
 	/*std::cout << "Please input cloud point filename: ";
 	std::cin >> filename;*/
 
@@ -267,10 +267,21 @@ size_t minKey(double *key, bool *mstSet, size_t n)
 
 // A utility function to print the  
 // constructed MST stored in parent[] 
-void printMST(size_t *parent, size_t n, double **graph)
+void printMST(size_t *parent, size_t n, double **graph, alglib::real_2d_array& normals)
 {
 	for (int i = 1; i < n; i++)
-		std::cout << parent[i] << "-" << i << " : " << graph[i][parent[i]] << std::endl;
+	{
+		std::cout << parent[i] << "-" << i << " : " << graph[i][parent[i]];
+		std::cout << "  [" << normals[i][0] << "," << normals[i][1] << "," << normals[i][2] << "]";
+		std::cout << " - [" << normals[parent[i]][0] << "," << normals[parent[i]][1] << "," << normals[parent[i]][2] << "]";
+		
+		double dot = 0;
+		dot += normals[i][0] * normals[parent[i]][0];
+		dot += normals[i][1] * normals[parent[i]][1];
+		dot += normals[i][2] * normals[parent[i]][2];
+
+		std::cout << " - dot: " << dot << std::endl;
+	}
 }
 
 size_t* primMst(double **graph, const size_t n, size_t *parent)
@@ -319,12 +330,22 @@ void propagateNormals(size_t *graphMst, size_t nPoints, alglib::real_2d_array& n
 			dot += normals[root][1] * normals[u][1];
 			dot += normals[root][2] * normals[u][2];
 
+
+			std::cout << "(" << u << "," << root << ") ";
+			std::cout << "[" << normals[root][0] << "," << normals[root][1] << "," << normals[root][2] << "]";
+			std::cout << " - [" << normals[u][0] << "," << normals[u][1] << "," << normals[u][2] << "]";
+			std::cout << " - dot: " << dot << std::endl;
+
+
 			// flip if neccesary
 			if (dot < 0)
 			{
+				std::cout << "!!!!!!!!!!!!! Flipped!";
+				std::cout << " - [" << normals[u][0] << "," << normals[u][1] << "," << normals[u][2] << "]";
 				normals[u][0] *= -1;
 				normals[u][1] *= -1;
 				normals[u][2] *= -1;
+				std::cout << " ->>> [" << normals[u][0] << "," << normals[u][1] << "," << normals[u][2] << "]";
 			}
 
 			// then propagate along u
@@ -415,6 +436,8 @@ struct KDTreeData{
 	//Centroids Tags
 	alglib::integer_1d_array tagsCentroids;
 
+	//Processed Normal
+	alglib::real_1d_array normalOriented;
 };
 
 struct OutData
@@ -494,7 +517,7 @@ OutData davidsmagic()
 	*
 	*/
 
-	double kRadius = 0.2f;	// this should be a function of 
+	double kRadius = 10.0f;	// this should be a function of 
 							// the density and noise of the point cloud
 
 	outData.kRadius = kRadius;
@@ -661,7 +684,7 @@ OutData davidsmagic()
 	}
 
 
-
+//#define PRINT_RIEMANNNIAN_GRAPH
 #ifdef PRINT_RIEMANNNIAN_GRAPH
 	std::cout << "\nRiemannian graph of centroids with w(u,v) = 1-|n_u . n_v| :" << std::endl;
 	printGraph(graph, nPoints, nPoints);
@@ -671,17 +694,23 @@ OutData davidsmagic()
 	size_t *graphMst = new size_t[nPoints];
 	primMst(graph, nPoints, graphMst);
 
+//#define PRINT_MST
 #ifdef PRINT_MST
 	std::cout << "\nMinimun spanning tree centroids with w(u,v) = 1-|n_u . n_v| :" << std::endl;
 	printMST(graphMst, nPoints, graph);
 #endif
 
+//#define SHOW_NORMALS
 #ifdef SHOW_NORMALS
 	std::cout << "\n\nNormals before propagation:" << std::endl;
 	std::cout << normals.tostring(constants::psd) << std::endl;
 #endif
 
 
+
+	// then propagate
+	printMST(graphMst, nPoints, graph, normals);
+	std::cout << "########################################################" << std::endl;
 
 	std::cout << "Propagating normal orientations rooted at " << mstRootIdx << "..." << std::endl;
 
@@ -690,8 +719,27 @@ OutData davidsmagic()
 	normals[mstRootIdx][1] = 0.0;
 	normals[mstRootIdx][2] = 1.0;
 
-	// then propagate
+	std::cout << "before:" << mstRootIdx << std::endl;
+	for (size_t i = 0; i < nPoints; i++)
+	{
+		if (graphMst[i] == -1)
+			mstRootIdx = i;
+	}
+	std::cout << "after:" << mstRootIdx << std::endl;
+	std::cout << "roots predeccesor:" << graphMst[mstRootIdx] << std::endl;
+
 	propagateNormals(graphMst, nPoints, normals, mstRootIdx);
+
+	printMST(graphMst, nPoints, graph, normals);
+	std::cout << "########################################################" << std::endl;
+
+	// gather data for rendering
+	for (size_t i = 0; i < nPoints; i++) 
+	{
+		alglib::real_1d_array t;
+		t.setcontent(constants::dims, normals[i]);
+		outData.kdTreeData[i].normalOriented = t;
+	}
 
 #ifdef SHOW_NORMALS
 	std::cout << "\n\nNormals after propagation:" << std::endl;

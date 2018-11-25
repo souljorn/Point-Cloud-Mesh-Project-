@@ -39,7 +39,7 @@ double find_Mod(double a, double b);
 //----------------------------------------------
 
 enum VAO_IDs { PointCloud, Lines, Grid, GridLines,
-	XYPlane, NormalsUO, QueryVao, NearestNeighborVAO, CentroidVAO, NumVAOs };
+	XYPlane, NormalsUO, QueryVao, NearestNeighborVAO, CentroidVAO, NormalsOriented, NumVAOs };
 GLuint  VAOs[NumVAOs];
 
 //Shader pointers
@@ -60,6 +60,7 @@ Mesh * queryPointMesh;
 Mesh * nearestNeighborMesh;
 Mesh * nearestNeighborMesh1;
 Mesh * centroidMesh;
+Mesh * normalsOriented;
 
 //----------------------------------------------
 // Data Globals
@@ -77,6 +78,7 @@ OutData data;
 
 //Data structures to hold all the data from algorithm
 std::vector<Vertex> normalsUnordered;
+std::vector<Vertex> normalOriented;
 std::vector<Vertex> queryPoints; 
 std::vector<std::vector<Vertex>> nearestNeighbor;
 std::vector<Vertex> centroidPoints;
@@ -175,6 +177,7 @@ void parseData()
 	int * tag;
 	int rows;
 	int i= 0;
+	double * normOriented;
 	for (auto d : data.kdTreeData) {
 		
 	/*	std::cout << "For query point " << d.queryPoint.tostring(constants::psd) << " with kRadius " << data.kRadius << std::endl;
@@ -201,14 +204,11 @@ void parseData()
 
 		//Get norms
 		norm = data.kdTreeData.at(i).normal.getcontent();
-		/*float x = norm[0];
-		float y = norm[1];
-		float z = norm[2];
-		std::cout << x << std::endl;
-		std::cout << y << std::endl;
-		std::cout << z << std::endl;*/
+		normOriented = data.kdTreeData.at(i).normalOriented.getcontent();
+		
+	
 		normalsUnordered.push_back(Vertex((float)norm[0] , (float)norm[1], (float)norm[2] , Violet));
-
+		normalOriented.push_back(Vertex((float)normOriented[0], (float)normOriented[1], (float)normOriented[2], Green));
 		//Query Points
 		qp = data.kdTreeData.at(i).queryPoint.getcontent();
 		queryPoints.push_back(Vertex((float)qp[0], (float)qp[1], (float)qp[2], Violet));
@@ -305,9 +305,9 @@ void init()
 		std::cout << "," << vert.z;
 		std::cout << "," << std::endl;*/
 		
-		 normalsUnordered.at(i).x = normalsUnordered.at(i).x + centroidPoints.at(i).x;
-		 normalsUnordered.at(i).y = normalsUnordered.at(i).y + centroidPoints.at(i).y;
-		 normalsUnordered.at(i).z = normalsUnordered.at(i).z + centroidPoints.at(i).z;
+		 normalsUnordered.at(i).x = 10* normalsUnordered.at(i).x + centroidPoints.at(i).x;
+		 normalsUnordered.at(i).y = 10 * normalsUnordered.at(i).y + centroidPoints.at(i).y;
+		 normalsUnordered.at(i).z = 10 * normalsUnordered.at(i).z + centroidPoints.at(i).z;
 		
 		
 	/*	std::cout << "After:";
@@ -319,6 +319,18 @@ void init()
 
 	normalsUO->createLines(centroidPoints, normalsUnordered);
 	normalsUO->createBuffers(VAOs[NormalsUO]);
+
+	normalsOriented = new Mesh();
+	//Shift the normals to the centroids
+	for (int i = 0; i < normalOriented.size(); i++) {
+
+		normalOriented.at(i).x = 10 * normalOriented.at(i).x + centroidPoints.at(i).x;
+		normalOriented.at(i).y = 10 * normalOriented.at(i).y + centroidPoints.at(i).y;
+		normalOriented.at(i).z = 10 * normalOriented.at(i).z + centroidPoints.at(i).z;
+	}
+
+	normalsOriented->createLines(centroidPoints, normalOriented);
+	normalsOriented->createBuffers(VAOs[NormalsOriented]);
 
 	//Query Point Mesh
 	queryPointMesh = new Mesh();
@@ -386,7 +398,7 @@ void display(int windowWidth, int windowHeight)
 
 	// Model matrix : an identity matrix (model will be at the origin)
 	glm::mat4 modelGrid = glm::mat4(1.0f);
-	modelGrid = glm::scale(modelGrid, glm::vec3(.05, .05, .05));
+	modelGrid = glm::scale(modelGrid, glm::vec3(.002, .002, .002));
 	modelGrid = glm::translate(modelGrid, glm::vec3(0, 0, 0));
 	modelGrid = glm::rotate(modelGrid, time * 5, glm::vec3(0, 1.0f, 0.1f));
 
@@ -408,13 +420,14 @@ void display(int windowWidth, int windowHeight)
 	//GLCall(glUniform1f(alphaBasic, sin(time * 2.0f) * 0.6f));
 
 	//----------Mesh Draw Calls for The XY PLANE/NEAREST NEIGHBOR/CENTROID/NORMALS------------------------------------
-	gridLines->drawLinesSequence(time, gridLines->getNumIndices() + 1);
+	//gridLines->drawLinesSequence(time, gridLines->getNumIndices() + 1);
 	//grid->drawPoints();
-	xzPlane->drawLines(0, 0, 0);
+	//xzPlane->drawLines(0, 0, 0);
 	//Turn Normals on/off with N key
 	if (norm) {
 		normalsUO->drawLines(0, 0, 0);
 	}
+	normalsOriented->drawLines(0,0,0);
 	nearestNeighborMesh->drawPointGroups(time, nearestNeighborMesh->indices.size(), nearestNeighborCount, speed);
 	centroidMesh->drawPoints();
 	

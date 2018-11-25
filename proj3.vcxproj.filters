@@ -141,4 +141,14 @@
   <ItemGroup>
     <ResourceCompile Include="proj3.rc" />
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="PointClouds\face_partial.obj">
+      <Filter>PointClouds</Filter>
+    </Text>
+  </ItemGroup>
+  <ItemGroup>
+    <Object Include="PointClouds\red_pepper_down.obj">
+      <Filter>PointClouds</Filter>
+    </Object>
+  </ItemGroup>
 </Project>
