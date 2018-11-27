@@ -404,7 +404,7 @@ void display(int windowWidth, int windowHeight)
 
 	// Model matrix : an identity matrix (model will be at the origin)
 	glm::mat4 modelPoint = glm::mat4(1.0f);
-	modelPoint = glm::scale(modelPoint, glm::vec3(.05, .05, .05));
+	modelPoint = glm::scale(modelPoint, glm::vec3(.002, .002, .002));
 	modelPoint = glm::translate(modelPoint, glm::vec3(0, 0, 0));
 	modelPoint = glm::rotate(modelPoint, time *5 , glm::vec3(0, 1.0f, 0.1f));
 
