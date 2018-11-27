@@ -314,13 +314,14 @@ public:
 	//modfactor is the size of all the indicies so overflow does not occur, rolls over to the beginning of indices
 	//group count is a vector of number of points in each group of nearest neighbors 
 	//speed is how fast we animate contoled with the O/P key
-	void drawPointGroups(float time, int modFactor, std::vector<int> groupCount, int speed)
+	void drawPointGroups(float time, int modFactor, std::vector<unsigned int> groupCount, std::vector<unsigned int> NNstartIndex, int speed)
 	{
-		delay = static_cast<unsigned int>(find_Mod(time * speed, modFactor));
+		delay = static_cast<unsigned int>(find_Mod(time * speed, groupCount.size() - 1));
 		
 		GLCall(glBindVertexArray(m_VAO));
 		GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_vbo_indices));
-		GLCall(glDrawElements(GL_POINTS, delay, GL_UNSIGNED_INT, (void*)0));
+		GLCall(glDrawElements(GL_POINTS, groupCount.at(delay), GL_UNSIGNED_INT, (void*)( NNstartIndex.at(delay) * sizeof(GLuint))));
+		//glDrawElementsBaseVertex(GL_POINTS, 20, GL_UNSIGNED_INT,0, 10);
 		GLCall(glBindVertexArray(0));
 		
 	}

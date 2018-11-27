@@ -83,10 +83,11 @@ std::vector<Vertex> queryPoints;
 std::vector<std::vector<Vertex>> nearestNeighbor;
 std::vector<Vertex> centroidPoints;
 std::vector<int> tagData;
-std::vector<int> nearestNeighborCount;
+std::vector<unsigned int> nearestNeighborCount;
+std::vector<unsigned int> NNGroupStartIndex;
 
 bool norm = false;	//Norms on off boolean
-int speed = 1500; //Used to speed up the NN-Animation with the O/P key
+int speed = 8; //Used to speed up the NN-Animation with the O/P key
 float nearPlane = .10f;
 float farPlane = 50.0f;
 
@@ -169,6 +170,7 @@ void cleanUp()
 }
 
 //Parse Data from algorithm header
+
 void parseData()
 {
 	double *norm;
@@ -178,6 +180,8 @@ void parseData()
 	int rows;
 	int i= 0;
 	double * normOriented;
+	//Push the first index then push i-1 + row
+	NNGroupStartIndex.push_back(0);
 	for (auto d : data.kdTreeData) {
 		
 	/*	std::cout << "For query point " << d.queryPoint.tostring(constants::psd) << " with kRadius " << data.kRadius << std::endl;
@@ -201,7 +205,8 @@ void parseData()
 		//Nerest neighbor points and group size
 		nearestNeighbor.push_back(temp);
 		nearestNeighborCount.push_back(rows);
-
+		NNGroupStartIndex.push_back(rows + NNGroupStartIndex.at(i));
+		//std::cout << "Start Numbers::" << NNGroupStartIndex.back() << std::endl;
 		//Get norms
 		norm = data.kdTreeData.at(i).normal.getcontent();
 		normOriented = data.kdTreeData.at(i).normalOriented.getcontent();
@@ -221,6 +226,10 @@ void parseData()
 		tag = data.kdTreeData.at(i).tagsCentroids.getcontent();
 		tagData.push_back(tag[0]);
 	}
+	//Remove the end index
+	NNGroupStartIndex.pop_back();
+	std::cout << "Start Numbers Size::" << NNGroupStartIndex.size() << std::endl;
+	std::cout << "Group Numbers Size::" << nearestNeighborCount.size() << std::endl;
 }
 
 //----------------------------------------------
@@ -269,7 +278,7 @@ void init()
 
 	// Setup up of vertices, indicies, and buffers for the mesh objects
 	// ------------------------------------------------------------------
-
+	std::cout << "NN-Count:" << nearestNeighborCount[0] << std::endl;
 	//Create Point Cloud from file
 	pointCloud = new Mesh();
 	//pointCloud->createPointCloud("./PointClouds/xy.obj");
@@ -428,10 +437,10 @@ void display(int windowWidth, int windowHeight)
 		normalsUO->drawLines(0, 0, 0);
 	}
 	normalsOriented->drawLines(0,0,0);
-	nearestNeighborMesh->drawPointGroups(time, nearestNeighborMesh->indices.size(), nearestNeighborCount, speed);
+	nearestNeighborMesh->drawPointGroups(time, nearestNeighborMesh->indices.size(), nearestNeighborCount, NNGroupStartIndex, speed);
 	centroidMesh->drawPoints();
 	
-	//nearestNeighborMesh1->drawPoints();
+	
 
 	//---------------Link Matrices to Point Shader--------------------------------
 	pointShaderProgram->Use();
@@ -445,6 +454,9 @@ void display(int windowWidth, int windowHeight)
 	//pointCloud->drawPoints();
 	queryPointMesh->drawPoints();
 	//gridLines->drawLines(0, 0, 0);
+
+	//Unbind the VAO
+	GLCall(glBindVertexArray(0));
 	GLCall(glDepthFunc(GL_LESS));
 }
 
@@ -540,12 +552,12 @@ void KeyCallback(GLFWwindow *window, int key, int scan, int act, int mode)
 	}
 	if (key == GLFW_KEY_O && act == GLFW_PRESS)
 	{
-		speed -= 100; 
+		speed -= 1; 
 		std::cout << "Speed:" << speed << std::endl;
 	}
 	if (key == GLFW_KEY_P && act == GLFW_PRESS)
 	{
-		speed += 100;
+		speed += 1;
 		std::cout << "Speed:" << speed << std::endl;
 	}
 	if (key == GLFW_KEY_Q && act == GLFW_PRESS)
@@ -568,8 +580,6 @@ void KeyCallback(GLFWwindow *window, int key, int scan, int act, int mode)
 		farPlane += 5.0f;
 		std::cout << "FarPlane:" << farPlane << std::endl;
 	}
-
-	
 
     //updating keys table 
     if (act == GLFW_PRESS)
