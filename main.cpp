@@ -68,6 +68,8 @@ Mesh * normalsOriented;
 
 //Shows gui when set to true
 bool showGui = true;
+// set true to show normals 
+bool normBool = false;
 
 //Variable to set point size through out the project
 float PointSize = 3.0;
@@ -148,7 +150,7 @@ bool firstMouse = true;
 // Display
 //----------------------------------------------
 // continually draws the scene
-void display(int windowWidth, int windowHeight, float f);
+void display(int windowWidth, int windowHeight, float rotateF,float sliderF );
 
 //----------------------------------------------
 // Clean UP Resources
@@ -366,7 +368,7 @@ void init()
 //----------------------------------------------
 // display function
 //-----------------------------------------------
-void display(int windowWidth, int windowHeight,float f)
+void display(int windowWidth, int windowHeight,float rotateF,float sliderF)
 {	
 	//Camera variables (not used currently)
     float ratio = (float)windowHeight/windowWidth;
@@ -400,13 +402,13 @@ void display(int windowWidth, int windowHeight,float f)
 	glm::mat4 modelGrid = glm::mat4(1.0f);
 	modelGrid = glm::scale(modelGrid, glm::vec3(.002, .002, .002));
 	modelGrid = glm::translate(modelGrid, glm::vec3(0, 0, 0));
-	modelGrid = glm::rotate(modelGrid, time * 5, glm::vec3(0, 1.0f, 0.1f));
+	modelGrid = glm::rotate(modelGrid, rotateF * 5, glm::vec3(0, 1.0f, 0.1f));
 
 	// Model matrix : an identity matrix (model will be at the origin)
 	glm::mat4 modelPoint = glm::mat4(1.0f);
 	modelPoint = glm::scale(modelPoint, glm::vec3(.05, .05, .05));
 	modelPoint = glm::translate(modelPoint, glm::vec3(0, 0, 0));
-	modelPoint = glm::rotate(modelPoint, f *5 , glm::vec3(0, 1.0f, 0.1f));
+	modelPoint = glm::rotate(modelPoint, sliderF *5 , glm::vec3(0, 1.0f, 0.1f));
 
 	//-------------------------
 	//     Activate Shader
@@ -428,7 +430,15 @@ void display(int windowWidth, int windowHeight,float f)
 		normalsUO->drawLines(0, 0, 0);
 	}
 	normalsOriented->drawLines(0,0,0);
-	nearestNeighborMesh->drawPointGroups(time, nearestNeighborMesh->indices.size(), nearestNeighborCount, speed);
+	/*
+	if(progressBool){
+		// draw neighbor mesh with time 
+	} else {
+		// draw with slider
+	}
+	*/
+	//nearestNeighborMesh->drawPointGroups(time, nearestNeighborMesh->indices.size(), nearestNeighborCount, speed);
+	nearestNeighborMesh->drawPointGroups(sliderF, nearestNeighborMesh->indices.size(), nearestNeighborCount, speed);
 	centroidMesh->drawPoints();
 	
 	//nearestNeighborMesh1->drawPoints();
@@ -746,24 +756,46 @@ int main()
 			if (showGui) {
 				//Gui Set Up
 				static float f = 0.0f;
+				static float sliderF = 0.0f;
 				static int counter = 0;
 
 				                          
 				ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
 				ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
 				ImGui::Checkbox("Another Window", &show_another_window);
-
-				ImGui::SliderFloat("float", &f, 0.0f, 32.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-				display(widthBuff, heightBuff,f);
+				ImGui::Text("Rotation slider");
+				ImGui::SliderFloat("1", &f, 0.0f, 32.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+				ImGui::Text("Slider for progression of points being worked on");
+				ImGui::SliderFloat("2", &sliderF, 0.0f, 1.0f);
+				//ImGui::SliderFloat("Slider", &sliderF, 0.0f, 1.0f);
+				
 				ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
 
 				if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
 					counter++;
 				ImGui::SameLine();
 				ImGui::Text("counter = %d", counter);
+				 
+				//ImGui::Checkbox("Normals", &normBool);
+				if (ImGui::Button("Normals on/off"))
+					normBool = true;
+				if (normBool) {
+					norm = !norm;
+					normBool = !normBool;
+				}
 
+				// zooming in/out 
+				if (ImGui::Button("Zoom In"))
+					camZ -= 1.1; 
+				ImGui::SameLine();
+				if (ImGui::Button("Zoom Out"))
+					camZ += 1.1;
 				ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+				ImGui::Text("Amount of points currently being loaded: ");
 				
+
+				// display 
+				display(widthBuff, heightBuff, f, sliderF);
 				//Gui render
 				ImGui::Render();
 				ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
