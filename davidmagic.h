@@ -284,7 +284,7 @@ void printMST(size_t *parent, size_t n, double **graph, alglib::real_2d_array& n
 		dot += normals[i][2] * normals[parent[i]][2];
 
 #ifdef DISPLAY_GRAPH
-		//std::cout << " - dot: " << dot << std::endl;
+		std::cout << " - dot: " << dot << std::endl;
 #endif
 	}
 }
