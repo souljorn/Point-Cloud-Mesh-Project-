@@ -199,7 +199,7 @@ public:
 	//Destructor
 	~Mesh()
 	{
-		glDeleteBuffers(1, &m_VAO);
+		glDeleteVertexArrays(1, &m_VAO);
 		glDeleteBuffers(1, &m_vbo_indices);
 		glDeleteBuffers(1, &m_vbo_vertices);
 	}
@@ -207,8 +207,8 @@ public:
 	//Create General Buffer for lines with indicies
 	void createBuffers(GLuint VAO)
 	{
-
 		m_VAO = VAO;
+		glBindVertexArray(m_VAO);
 		glGenBuffers(1, &m_vbo_vertices);
 		glBindBuffer(GL_ARRAY_BUFFER, m_vbo_vertices);
 		glBufferData(GL_ARRAY_BUFFER, getNumVertices() * 7 * sizeof(float), &vertices.front(), GL_STATIC_DRAW);
@@ -217,9 +217,27 @@ public:
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_vbo_indices);
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, getNumIndices() * sizeof(unsigned int), &indices.front(), GL_STATIC_DRAW);
 
+		GLCall(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)0));
+		GLCall(glEnableVertexAttribArray(0));
+
+		GLCall(glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)(3 * sizeof(float))));
+		GLCall(glEnableVertexAttribArray(1));
+
+		GLCall(glBindVertexArray(0));
+	}
+
+	//Create buffer for points with indices
+	void createBuffersPointsGroups(GLuint VAO)
+	{
+		m_VAO = VAO;
 		glBindVertexArray(m_VAO);
+		glGenBuffers(1, &m_vbo_vertices);
 		glBindBuffer(GL_ARRAY_BUFFER, m_vbo_vertices);
+		glBufferData(GL_ARRAY_BUFFER, getNumVertices() * 7 * sizeof(float), &vertices.front(), GL_STATIC_DRAW);
+
+		glGenBuffers(1, &m_vbo_indices);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_vbo_indices);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, getNumIndices() * sizeof(unsigned int), &indices.front(), GL_STATIC_DRAW);
 
 		GLCall(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)0));
 		GLCall(glEnableVertexAttribArray(0));
@@ -231,10 +249,11 @@ public:
 		GLCall(glBindVertexArray(0));
 	}
 
-	//Create buffer for points with indicies
-	void createBuffersPointsGroups(GLuint VAO)
+	//Create Buffer for Triangles
+	void createBufferTriangle(GLuint VAO)
 	{
 		m_VAO = VAO;
+		glBindVertexArray(m_VAO);
 		glGenBuffers(1, &m_vbo_vertices);
 		glBindBuffer(GL_ARRAY_BUFFER, m_vbo_vertices);
 		glBufferData(GL_ARRAY_BUFFER, getNumVertices() * 7 * sizeof(float), &vertices.front(), GL_STATIC_DRAW);
@@ -242,10 +261,6 @@ public:
 		glGenBuffers(1, &m_vbo_indices);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_vbo_indices);
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, getNumIndices() * sizeof(unsigned int), &indices.front(), GL_STATIC_DRAW);
-
-		glBindVertexArray(m_VAO);
-		glBindBuffer(GL_ARRAY_BUFFER, m_vbo_vertices);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_vbo_indices);
 
 		GLCall(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)0));
 		GLCall(glEnableVertexAttribArray(0));
@@ -255,6 +270,7 @@ public:
 
 		GLCall(glBindBuffer(GL_ARRAY_BUFFER, 0));
 		GLCall(glBindVertexArray(0));
+		
 	}
 
 	//Create Buffer that does not need to index points
@@ -283,7 +299,16 @@ public:
 	{
 		GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_vbo_indices));
 		GLCall(glBindVertexArray(m_VAO));
-		GLCall(glDrawElements(GL_LINES, indices.size() * 2, GL_UNSIGNED_INT, 0));
+		GLCall(glDrawElements(GL_LINES, indices.size() * 2, GL_UNSIGNED_INT, (void*)0));
+		GLCall(glBindVertexArray(0));
+	}
+
+	//Draw lines in sequence iterating through all lines in the mesh
+	void drawTriangle()
+	{
+		GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_vbo_indices));
+		GLCall(glBindVertexArray(m_VAO));
+		GLCall(glDrawElements(GL_TRIANGLES, getNumFaces() * 3, GL_UNSIGNED_INT, (void*)0));
 		GLCall(glBindVertexArray(0));
 	}
 
@@ -300,6 +325,7 @@ public:
 		GLCall(glBindVertexArray(0));
 		
 	}
+
 
 	//Draw all points in the mesh
 	void drawPoints()
@@ -417,7 +443,7 @@ public:
 	{
 		indices.push_back(getNumVertices());
 		for (auto point : points) {
-			vertices.push_back(Vertex(point, color));
+			vertices.push_back(Vertex(point, glm::vec4(color.r, color.g, color.b, 1.0f)));
 			indices.push_back(getNumVertices());
 		}
 		
@@ -525,6 +551,19 @@ public:
 		faces.push_back(setIndices(0, 10, 11));
 		faces.push_back(setIndices(7, 10, 0));
 
+	}
+
+	void createTriangle(Vertex p1,Vertex p2, Vertex p3, color color)
+	{
+		vertices.push_back(Vertex(p1, glm::vec4(color.r, color.g, color.b, 0.2f)));
+		vertices.push_back(Vertex(p2, glm::vec4(color.r, color.g, color.b, 0.2f)));
+		vertices.push_back(Vertex(p3, glm::vec4(color.r, color.g, color.b, 0.2f)));
+
+		indices.push_back(0);
+		indices.push_back(1);
+		indices.push_back(2);
+
+		faces.push_back(Faces(0, 1, 2));
 	}
 
 	int getNumVertices() {
