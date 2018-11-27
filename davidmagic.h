@@ -178,7 +178,7 @@ alglib::ae_int_t getKNeighborsTagged(alglib::kdtree& kdt, alglib::real_2d_array&
 	alglib::kdtreequeryresultsx(kdt, result);
 	alglib::kdtreequeryresultstags(kdt, tags);
 
-	std::cout << tags.tostring() << std::endl;
+	//std::cout << tags.tostring() << std::endl;
 
 	// return the size of neighbor set
 	return k;
@@ -271,18 +271,24 @@ void printMST(size_t *parent, size_t n, double **graph, alglib::real_2d_array& n
 {
 	for (int i = 1; i < n; i++)
 	{
+
+#ifdef DISPLAY_GRAPH
 		std::cout << parent[i] << "-" << i << " : " << graph[i][parent[i]];
 		std::cout << "  [" << normals[i][0] << "," << normals[i][1] << "," << normals[i][2] << "]";
 		std::cout << " - [" << normals[parent[i]][0] << "," << normals[parent[i]][1] << "," << normals[parent[i]][2] << "]";
+#endif
 		
 		double dot = 0;
 		dot += normals[i][0] * normals[parent[i]][0];
 		dot += normals[i][1] * normals[parent[i]][1];
 		dot += normals[i][2] * normals[parent[i]][2];
 
+#ifdef DISPLAY_GRAPH
 		std::cout << " - dot: " << dot << std::endl;
+#endif
 	}
 }
+
 
 size_t* primMst(double **graph, const size_t n, size_t *parent)
 {
@@ -330,22 +336,27 @@ void propagateNormals(size_t *graphMst, size_t nPoints, alglib::real_2d_array& n
 			dot += normals[root][1] * normals[u][1];
 			dot += normals[root][2] * normals[u][2];
 
-
+#ifdef DISPLAY_GRAPH
 			std::cout << "(" << u << "," << root << ") ";
 			std::cout << "[" << normals[root][0] << "," << normals[root][1] << "," << normals[root][2] << "]";
 			std::cout << " - [" << normals[u][0] << "," << normals[u][1] << "," << normals[u][2] << "]";
 			std::cout << " - dot: " << dot << std::endl;
-
+#endif
 
 			// flip if neccesary
 			if (dot < 0)
 			{
+
+#ifdef DISPLAY_GRAPH
 				std::cout << "!!!!!!!!!!!!! Flipped!";
 				std::cout << " - [" << normals[u][0] << "," << normals[u][1] << "," << normals[u][2] << "]";
+#endif
 				normals[u][0] *= -1;
 				normals[u][1] *= -1;
 				normals[u][2] *= -1;
+#ifdef DISPLAY_GRAPH
 				std::cout << " ->>> [" << normals[u][0] << "," << normals[u][1] << "," << normals[u][2] << "]";
+#endif
 			}
 
 			// then propagate along u
@@ -353,11 +364,6 @@ void propagateNormals(size_t *graphMst, size_t nPoints, alglib::real_2d_array& n
 		}
 	}
 }
-
-
-
-
-
 
 void printMatrix(double **matrix, const size_t rows, const size_t cols)
 {
@@ -369,11 +375,6 @@ void printMatrix(double **matrix, const size_t rows, const size_t cols)
 		std::cout << std::endl;
 	}
 }
-
-
-
-
-
 
 void printGraph(double **matrix, const size_t rows, const size_t cols)
 {
@@ -397,9 +398,6 @@ void printGraph(double **matrix, const size_t rows, const size_t cols)
 	}
 }
 
-
-
-
 template <typename T>
 void deleteDoubleArray(T **arr, const size_t n)
 {
@@ -409,14 +407,10 @@ void deleteDoubleArray(T **arr, const size_t n)
 	delete[] arr;
 }
 
-
-
-
 double signedDistance(alglib::real_1d_array& point, alglib::real_1d_array& normal, alglib::real_1d_array& centroid, double radius)
 {
 	return 0.0;
 }
-
 
 struct KDTreeData{
 	
