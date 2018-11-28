@@ -70,6 +70,8 @@ Mesh * normalsOriented;
 bool showGui = true;
 // set true to show normals 
 bool normBool = false;
+bool autoBool = false; 
+bool manBool = false; 
 
 //Variable to set point size through out the project
 float PointSize = 3.0;
@@ -437,8 +439,10 @@ void display(int windowWidth, int windowHeight,float rotateF,float sliderF)
 		// draw with slider
 	}
 	*/
-	//nearestNeighborMesh->drawPointGroups(time, nearestNeighborMesh->indices.size(), nearestNeighborCount, speed);
-	nearestNeighborMesh->drawPointGroups(sliderF, nearestNeighborMesh->indices.size(), nearestNeighborCount, speed);
+	if (!manBool)
+		nearestNeighborMesh->drawPointGroups(time, nearestNeighborMesh->indices.size(), nearestNeighborCount, speed);
+	else 
+		nearestNeighborMesh->drawPointGroups(sliderF, nearestNeighborMesh->indices.size(), nearestNeighborCount, speed);
 	centroidMesh->drawPoints();
 	
 	//nearestNeighborMesh1->drawPoints();
@@ -757,6 +761,7 @@ int main()
 				//Gui Set Up
 				static float f = 0.0f;
 				static float sliderF = 0.0f;
+				static float sliderS = 0.0f; 
 				static int counter = 0;
 
 				                          
@@ -764,9 +769,13 @@ int main()
 				ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
 				ImGui::Checkbox("Another Window", &show_another_window);
 				ImGui::Text("Rotation slider");
-				ImGui::SliderFloat("1", &f, 0.0f, 32.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-				ImGui::Text("Slider for progression of points being worked on");
-				ImGui::SliderFloat("2", &sliderF, 0.0f, 1.0f);
+				ImGui::SliderFloat("1", &f, 0.0f, 64.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+				if (ImGui::Button("Toggle auto/manual nearest neighbors"))
+					manBool = !manBool; 
+				ImGui::Text("Slider for speed of manual nearest neighbors progression");
+				ImGui::SliderFloat("2", &sliderF, 0.0f, 4.0f);
+				ImGui::Text("Slider for speed of automatic nearest neighbors progression");
+				ImGui::SliderFloat("3", &sliderS, 0.0f, 10.0f);
 				//ImGui::SliderFloat("Slider", &sliderF, 0.0f, 1.0f);
 				
 				ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
@@ -779,6 +788,7 @@ int main()
 				//ImGui::Checkbox("Normals", &normBool);
 				if (ImGui::Button("Normals on/off"))
 					normBool = true;
+				// gotta reset the bool right after the norm is set or else it will spaz out 
 				if (normBool) {
 					norm = !norm;
 					normBool = !normBool;
@@ -791,7 +801,9 @@ int main()
 				if (ImGui::Button("Zoom Out"))
 					camZ += 1.1;
 				ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-				ImGui::Text("Amount of points currently being loaded: ");
+				ImGui::Text("Amount of points currently being loaded: ",data.nPoints);
+				ImGui::Text("Current neighborhood being operating on: ");
+				//ImGui::Text("X:",x point of current node,"Y:",y point ,"Z:",z point);
 				
 
 				// display 
