@@ -388,7 +388,7 @@ void init()
 	//create Triangle Mesh
 	triangleTest = new Mesh();
 	triangleTest->createTriangle(centroidPoints.at(0), centroidPoints.at(100), centroidPoints.at(200), Yellow);
-	triangleTest->createBufferTriangle(VAOs[CentroidVAO]);
+	triangleTest->createBufferTriangle(VAOs[TriangleTest]);
 }
 
 //----------------------------------------------
@@ -467,6 +467,12 @@ void display(int windowWidth, int windowHeight,float rotateF,float sliderF)
 	centroidMesh->drawPoints();
 	normalsOriented->drawLines(0, 0, 0);
 	nearestNeighborMesh->drawPointGroups(time, nearestNeighborMesh->indices.size(), nearestNeighborCount, NNGroupStartIndex, speed);
+	//pointCloud->drawPoints();
+	queryPointMesh->drawPoints();
+	//gridLines->drawLines(0, 0, 0);
+
+	//Transparent Objects must be drawn last
+	triangleTest->drawTriangle();
 
 	//---------------Link Matrices to Point Shader--------------------------------
 	pointShaderProgram->Use();
@@ -474,15 +480,10 @@ void display(int windowWidth, int windowHeight,float rotateF,float sliderF)
 	GLCall(glUniformMatrix4fv(viewIDPoint, 1, GL_FALSE, glm::value_ptr(view)));
 	GLCall(glUniformMatrix4fv(projectionIDPoint, 1, GL_FALSE, glm::value_ptr(projection)));
 	//Alpha is a float in the shader used to add jitter to the query points
-	GLCall(glUniform1f(alphaBasic, ((sin(time * 150.0f) + 1) * .0005) + .995f));
+	GLCall(glUniform1f(alphaBasic, (sin(time * 10.0f))));
 
 	//----------Mesh Draw Calls for The Points------------------------------------
-	//pointCloud->drawPoints();
-	queryPointMesh->drawPoints();
-	//gridLines->drawLines(0, 0, 0);
-
-	//Transparent Objects must be drawn last
-	triangleTest->drawTriangle();
+	
 	
 	//Unbind the VAO
 	GLCall(glBindVertexArray(0));
