@@ -434,7 +434,7 @@ void display(int windowWidth, int windowHeight,float rotateF,float sliderF)
 	glm::mat4 modelPoint = glm::mat4(1.0f);
 	modelPoint = glm::scale(modelPoint, glm::vec3(.002, .002, .002));
 	modelPoint = glm::translate(modelPoint, glm::vec3(0, 0, 0));
-	modelPoint = glm::rotate(modelPoint, sliderF *5 , glm::vec3(0, 1.0f, 0.1f));
+	modelPoint = glm::rotate(modelPoint, rotateF *5 , glm::vec3(0, 1.0f, 0.1f));
 
 	//-------------------------
 	//     Activate Shader
@@ -463,10 +463,7 @@ void display(int windowWidth, int windowHeight,float rotateF,float sliderF)
 		// draw with slider
 	}
 	*/
-	if (!manBool)
-		nearestNeighborMesh->drawPointGroups(time, nearestNeighborMesh->indices.size(), nearestNeighborCount, speed);
-	else 
-		nearestNeighborMesh->drawPointGroups(sliderF, nearestNeighborMesh->indices.size(), nearestNeighborCount, speed);
+
 	centroidMesh->drawPoints();
 	normalsOriented->drawLines(0, 0, 0);
 	nearestNeighborMesh->drawPointGroups(time, nearestNeighborMesh->indices.size(), nearestNeighborCount, NNGroupStartIndex, speed);
