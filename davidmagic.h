@@ -7,6 +7,7 @@
 #include <windows.h>
 #include <set>
 #include <stdlib.h>
+#include "cubesmagic.h"
 
 // adjust verbosity for debugging
 //#define VERY_VERBOSE
@@ -722,7 +723,7 @@ OutData davidsmagic()
 	std::cout << "after:" << mstRootIdx << std::endl;
 	std::cout << "roots predeccesor:" << graphMst[mstRootIdx] << std::endl;
 
-	propagateNormals(graphMst, nPoints, normals, mstRootIdx);
+	propagateNormals(graphMst, nPoints, normals, mstRootIdx);    
 
 	printMST(graphMst, nPoints, graph, normals);
 	std::cout << "########################################################" << std::endl;
