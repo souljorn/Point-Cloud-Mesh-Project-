@@ -71,7 +71,7 @@ Mesh * triangleTest;
 
 //Shows gui when set to true
 bool showGui = true;
-// set true to show normals 
+// set true to show oriented normals 
 bool normBool = false;
 bool autoBool = false; 
 bool manBool = false; 
@@ -156,7 +156,7 @@ bool firstMouse = true;
 // Display
 //----------------------------------------------
 // continually draws the scene
-void display(int windowWidth, int windowHeight, float rotateF,float sliderF );
+void display(int windowWidth, int windowHeight, float rotateF,float sliderF);
 
 //----------------------------------------------
 // Clean UP Resources
@@ -394,7 +394,7 @@ void init()
 //----------------------------------------------
 // display function
 //-----------------------------------------------
-void display(int windowWidth, int windowHeight,float rotateF,float sliderF)
+void display(int windowWidth, int windowHeight,float rotateF,float sliderF,float manNN)
 {	
 	//Camera variables (not used currently)
     float ratio = (float)windowHeight/windowWidth;
@@ -480,8 +480,12 @@ void display(int windowWidth, int windowHeight,float rotateF,float sliderF)
 	GLCall(glUniformMatrix4fv(viewIDPoint, 1, GL_FALSE, glm::value_ptr(view)));
 	GLCall(glUniformMatrix4fv(projectionIDPoint, 1, GL_FALSE, glm::value_ptr(projection)));
 	//Alpha is a float in the shader used to add jitter to the query points
-	GLCall(glUniform1f(alphaBasic, (sin(time * 10.0f))));
-
+	if (!manBool) {
+		GLCall(glUniform1f(alphaBasic, ((sin(time * 150.0f) + 1) * .0005) + .995f));
+	}
+	else {
+		GLCall(glUniform1f(alphaBasic, ((sin(manNN * 150.0f) + 1) * .0005) + .995f));
+	}
 	//----------Mesh Draw Calls for The Points------------------------------------
 	
 	
@@ -788,31 +792,42 @@ int main()
 				static float f = 0.0f;
 				static float sliderF = 0.0f;
 				static float sliderS = 0.0f; 
+				static float manNN = 0.0f;
 				static int counter = 0;
 
 				                          
-				ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
-				ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
-				ImGui::Checkbox("Another Window", &show_another_window);
+				//ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
+				//ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
+				//ImGui::Checkbox("Another Window", &show_another_window);
 				ImGui::Text("Rotation slider");
 				ImGui::SliderFloat("1", &f, 0.0f, 64.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
 				if (ImGui::Button("Toggle auto/manual nearest neighbors"))
 					manBool = !manBool; 
 				ImGui::Text("Slider for speed of manual nearest neighbors progression");
 				ImGui::SliderFloat("2", &sliderF, 0.0f, 4.0f);
-				ImGui::Text("Slider for speed of automatic nearest neighbors progression");
-				ImGui::SliderFloat("3", &sliderS, 0.0f, 10.0f);
+				//ImGui::Text("Slider for speed of automatic nearest neighbors progression");
+				//ImGui::SliderFloat("3", &sliderS, 0.1f, 10.0f);
+				//speed += sliderS;
+				if (ImGui::Button("auto speed (+)")) {
+					speed += 1;
+				} ImGui::SameLine();
+				if (ImGui::Button("auto speed (-)")) {
+					speed -= 1;
+				}
+				if (speed < 0) speed =1;
+				ImGui::Text("Slider for manual nearest neighbors progression");
+				ImGui::SliderFloat("4", &manNN,0.0f,3.0f);
 				//ImGui::SliderFloat("Slider", &sliderF, 0.0f, 1.0f);
 				
-				ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
+				//ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
 
-				if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
-					counter++;
-				ImGui::SameLine();
-				ImGui::Text("counter = %d", counter);
+				//if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
+				//	counter++;
+				//ImGui::SameLine();
+				//ImGui::Text("counter = %d", counter);
 				 
 				//ImGui::Checkbox("Normals", &normBool);
-				if (ImGui::Button("Normals on/off"))
+				if (ImGui::Button("Oriented normals on/off"))
 					normBool = true;
 				// gotta reset the bool right after the norm is set or else it will spaz out 
 				if (normBool) {
@@ -826,14 +841,55 @@ int main()
 				ImGui::SameLine();
 				if (ImGui::Button("Zoom Out"))
 					camZ += 1.1;
+				// rotating in x and y 
+				if (ImGui::Button("Rotate left"))
+					camX -= 1.1;
+				ImGui::SameLine();
+				if (ImGui::Button("Rotate right"))
+					camX += 1.1;
+				if (ImGui::Button("Pitch up"))
+					camY -= 1.1;
+				ImGui::SameLine();
+				if (ImGui::Button("Pitch down"))
+					camY += 1.1;
+
+				// reset button 
+				if (ImGui::Button("Reset camera")) {
+					camX = -0.8f;
+					camY = -2.8f;
+					camZ = 30.0f;
+					f = 0.0f;
+					lookX = 0.024f;
+					lookY = 0.049f;
+					lookZ = -0.065f;
+				}
+				if (ImGui::Button("Reset process")) {
+					delay = 0;
+				}
+					
+				// program data 
 				ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-				ImGui::Text("Amount of points currently being loaded: ",data.nPoints);
-				ImGui::Text("Current neighborhood being operating on: ");
+				ImGui::Text("Current time: %f" ,&time);
+				ImGui::Text("Amount of points currently being loaded: %d",data.nPoints);
+				ImGui::Text("Current neighborhood being operating on: %d", delay);
+				int NNcount = nearestNeighborCount.at(delay);
+				ImGui::Text("Amount of neighbors that the %d point has: %d",delay,NNcount);
+				//for (int i = delay; i < delay+NNcount; i++) {
+				//	ImGui::Text(" ",);
+				//}
+
+
+				//camera data 
+				ImGui::Text("Camera X data: %f", camX);
+				ImGui::Text("Camera Y data: %f", camY);
+				ImGui::Text("Camera Z data: %f", camZ);
+				// loop thru vector from delay's startpoint to the end, which is the size of it's neighborhood 
+				// NNstartIndex.at(delay) 
 				//ImGui::Text("X:",x point of current node,"Y:",y point ,"Z:",z point);
 				
 
 				// display 
-				display(widthBuff, heightBuff, f, sliderF);
+				display(widthBuff, heightBuff, f, sliderF,manNN);
 				//Gui render
 				ImGui::Render();
 				ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
