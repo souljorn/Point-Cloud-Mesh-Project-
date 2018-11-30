@@ -249,7 +249,7 @@ public:
 		GLCall(glBindVertexArray(0));
 	}
 
-	//Create Buffer for Triangles
+	//Create Buffer for Triangles (i.e. faces) 
 	void createBufferTriangle(GLuint VAO)
 	{
 		m_VAO = VAO;
@@ -507,6 +507,7 @@ public:
 	}
 
 	//Create an Icosphere of verticies and indices
+	//Pulled from project 1 
 	void createIsoshpere() {
 		float pos = (1.0 + sqrtf(5.0)) / 2.0;
 
