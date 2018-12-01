@@ -293,7 +293,7 @@ void init()
 
 	// Setup up of vertices, indicies, and buffers for the mesh objects
 	// ------------------------------------------------------------------
-	std::cout << "NN-Count:" << nearestNeighborCount[0] << std::endl;
+	//std::cout << "NN-Count:" << nearestNeighborCount[0] << std::endl;
 	//Create Point Cloud from file
 	pointCloud = new Mesh();
 	//pointCloud->createPointCloud("./PointClouds/xy.obj");
@@ -716,8 +716,13 @@ int main()
 	std::cout << "summed:" << summed << std::endl;
 	std::cout << "dot product:" << dotproduct << std::endl;*/
 
-	data = do_magic();
+	bool result = do_magic(data); // here is where the magic happens!
+
+	if (!result)
+		return 1;
 	
+
+
 	//instantiating the window
 	//---------------------------------------
 	glfwInit();

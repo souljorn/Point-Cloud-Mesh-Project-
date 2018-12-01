@@ -1,10 +1,11 @@
 #pragma once
 
 // adjust verbosity for debugging
-//#define VERY_VERBOSE
-//#define DISPLAY_POINT_PLANES
+#define VERY_VERBOSE
+#define DISPLAY_POINT_PLANES
 //#define OUTPUT_TO_FILE
-//#define PRINT_MST
+#define PRINT_MST
+#define SHOW_NORMALS
 
 #include <fstream>
 #include <iomanip>
@@ -24,7 +25,7 @@
 #include "david_constants.h"
 #include "david_kdtmanip.h"
 #include "david_graph.h"
-#include "cubesmagic.h"
+#include "david_cubes.h"
 
 // Tim's data collection structure
 #include "tim_outdata.h"
@@ -46,7 +47,7 @@ double signedDistance(alglib::real_1d_array& point, alglib::real_1d_array& norma
 
 
 
-OutData do_magic()
+bool do_magic(OutData& outData)
 {
 
 #ifdef OUTPUT_TO_FILE
@@ -59,7 +60,8 @@ OutData do_magic()
 	*	LOAD THE OBJ FILE
 	*/
 
-	std::string filename = cloudfile::getCloudPointFilename();
+	//std::string filename = cloudfile::getCloudPointFilename();
+	std::string filename = constants::cloudPointsBasePath + "red_pepper_down.obj";
 	std::cout << "Loading " << filename << " wavefront file..." << std::endl;
 
 	tinyobj::attrib_t pcloud;
@@ -67,6 +69,7 @@ OutData do_magic()
 
 	if (!loaded) {
 		std::cerr << "ERROR: The OBJ file could not be loaded!" << std::endl;
+		return false;
 	}
 
 
@@ -89,7 +92,6 @@ OutData do_magic()
 	cloudfile::adaptDataPoints(pcloud.vertices, nPoints, points);
 
 	// struct to export data points
-	OutData outData;
 	outData.nPoints = nPoints;
 	outData.points = points;
 
@@ -257,7 +259,7 @@ OutData do_magic()
 //#define PRINT_RIEMANNNIAN_GRAPH
 #ifdef PRINT_RIEMANNNIAN_GRAPH
 	std::cout << "\nRiemannian graph of centroids with w(u,v) = 1-|n_u . n_v| :" << std::endl;
-	printGraph(graph, nPoints, nPoints);
+	graph::printGraph(graph, nPoints, nPoints);
 #endif
 
 	// create the graph mst successor array
@@ -266,7 +268,7 @@ OutData do_magic()
 
 #ifdef PRINT_MST
 	std::cout << "\nMinimun spanning tree centroids with w(u,v) = 1-|n_u . n_v| :" << std::endl;
-	printMST(graphMst, nPoints, graph);
+	graph::printMst(graphMst, nPoints, graph, normals);
 #endif
 
 #ifdef SHOW_NORMALS
@@ -293,7 +295,7 @@ OutData do_magic()
 
 #ifdef PRINT_MST
 	std::cout << "\nMinimun spanning tree centroids with w(u,v) = 1-|n_u . n_v| :" << std::endl;
-	printMST(graphMst, nPoints, graph);
+	graph::printMst(graphMst, nPoints, graph, normals);
 #endif
 
 	// gather data for rendering
@@ -309,9 +311,11 @@ OutData do_magic()
 	std::cout << normals.tostring(constants::psd) << std::endl;
 #endif
 	
-	// clean up memory
-	delete[] graphMst;
-	graph::deleteAdjMatrix(graph, nPoints);
+	outData.rGraph = graph;
 
-	return outData;
+	// clean up memory
+	// delete[] graphMst;
+	// graph::deleteAdjMatrix(graph, nPoints);
+
+	return true;
 }

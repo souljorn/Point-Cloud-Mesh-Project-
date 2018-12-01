@@ -26,9 +26,9 @@ bool cloudfile::loadCloud(tinyobj::attrib_t& attrib, const std::string& filename
 
 std::string cloudfile::getCloudPointFilename(std::string basePath)
 {
-	std::string filename = "red_pepper_down.obj";
-	/*std::cout << "Please input cloud point filename: ";
-	std::cin >> filename;*/
+	std::string filename;
+	std::cout << "Please input cloud point filename: ";
+	std::cin >> filename;
 
 
 	return basePath + filename;

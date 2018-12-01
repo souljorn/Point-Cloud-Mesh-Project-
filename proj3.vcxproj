@@ -41,7 +41,7 @@
   <ItemGroup>
     <ClInclude Include="Camera.h" />
     <ClInclude Include="colors.h" />
-    <ClInclude Include="cubesmagic.h" />
+    <ClInclude Include="david_cubes.h" />
     <ClInclude Include="david_magic.h" />
     <ClInclude Include="david_constants.h" />
     <ClInclude Include="david_graph.h" />
@@ -58,7 +58,10 @@
     <ClInclude Include="Libraries\imgui\imstb_textedit.h" />
     <ClInclude Include="Libraries\imgui\imstb_truetype.h" />
     <ClInclude Include="libraries\tiny_obj_loader.h" />
+    <ClInclude Include="MarchingCubesCross.h" />
+    <ClInclude Include="MCTable.h" />
     <ClInclude Include="Mesh.h" />
+    <ClInclude Include="mpVector.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="stglew.h" />
@@ -108,6 +111,8 @@
     <ClCompile Include="david_cloudfile.cpp" />
     <ClCompile Include="david_kdtmanip.cpp" />
     <ClCompile Include="david_graph.cpp" />
+    <ClCompile Include="MarchingCubesCross.cpp" />
+    <ClCompile Include="mpVector.cpp" />
     <ClCompile Include="utilities.cpp" />
     <ClCompile Include="VertexObj.cpp" />
   </ItemGroup>
@@ -136,7 +141,7 @@
       <FileType>Document</FileType>
     </None>
     <None Include="PointClouds\xy.obj">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
       <FileType>Document</FileType>
     </None>
     <None Include="PointClouds\xy_nearly.obj">
