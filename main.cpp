@@ -22,7 +22,7 @@
 #include "./Libraries/imgui/imgui.h"
 #include "./Libraries/imgui/examples/imgui_impl_glfw.h"
 #include "./Libraries/imgui/examples/imgui_impl_opengl3.h"
-#include "davidmagic.h"// david's magic header
+#include "david_magic.h"// david's magic header
 
 /***********To Do************************
  *Animate NN by point groups
@@ -697,8 +697,27 @@ void KeyMovement()
 //----------------------------------------------------
 int main()
 {
-	data = davidsmagic();
+	//DELETE THIS
+	/*alglib::real_1d_array a, b;
+	double _a[3] = { 1,0,0 };
+	double _b[3] = { 0,3,3 };
+	a.setcontent(3, _a);
+	b.setcontent(3, _b);
 
+	alglib::real_1d_array sum = a + b;
+	alglib::real_1d_array diff = a - b;
+	alglib::real_1d_array pm = a * b;
+	double dotproduct = tools::dot(a,b);
+	double summed = tools::sum(a);
+
+	std::cout << "sum:" << sum.tostring(6) << std::endl;
+	std::cout << "diff:" << diff.tostring(6) << std::endl;
+	std::cout << "pm:" << pm.tostring(6) << std::endl;
+	std::cout << "summed:" << summed << std::endl;
+	std::cout << "dot product:" << dotproduct << std::endl;*/
+
+	data = do_magic();
+	
 	//instantiating the window
 	//---------------------------------------
 	glfwInit();
@@ -925,6 +944,8 @@ int main()
 
 	//Cleanup
 	cleanUp();
+
+	
 	// return
 	return 0;
 }

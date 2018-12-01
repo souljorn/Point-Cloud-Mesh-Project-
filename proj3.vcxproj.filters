@@ -27,6 +27,10 @@
     <ClCompile Include="libraries\tiny_obj_loader.cc">
       <Filter>Libraries</Filter>
     </ClCompile>
+    <ClCompile Include="david_operations.cpp" />
+    <ClCompile Include="david_cloudfile.cpp" />
+    <ClCompile Include="david_kdtmanip.cpp" />
+    <ClCompile Include="david_graph.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />
@@ -62,10 +66,17 @@
       <Filter>Libraries</Filter>
     </ClInclude>
     <ClInclude Include="Mesh.h" />
-    <ClInclude Include="davidmagic.h" />
     <ClInclude Include="libraries\tiny_obj_loader.h">
       <Filter>Libraries</Filter>
     </ClInclude>
+    <ClInclude Include="cubesmagic.h" />
+    <ClInclude Include="david_operations.h" />
+    <ClInclude Include="david_cloudfile.h" />
+    <ClInclude Include="david_constants.h" />
+    <ClInclude Include="david_kdtmanip.h" />
+    <ClInclude Include="david_graph.h" />
+    <ClInclude Include="tim_outdata.h" />
+    <ClInclude Include="david_magic.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="kernels\phong.frag" />
