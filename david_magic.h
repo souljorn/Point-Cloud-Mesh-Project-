@@ -1,10 +1,11 @@
 #pragma once
 
 // adjust verbosity for debugging
-//#define VERY_VERBOSE
-//#define DISPLAY_POINT_PLANES
+#define VERY_VERBOSE
+#define DISPLAY_POINT_PLANES
 //#define OUTPUT_TO_FILE
-//#define PRINT_MST
+#define PRINT_MST
+#define SHOW_NORMALS
 
 #include <fstream>
 #include <iomanip>
@@ -60,7 +61,7 @@ bool do_magic(OutData& outData)
 	*/
 
 	//std::string filename = cloudfile::getCloudPointFilename();
-	std::string filename = "xy.obj";
+	std::string filename = constants::cloudPointsBasePath + "red_pepper_down.obj";
 	std::cout << "Loading " << filename << " wavefront file..." << std::endl;
 
 	tinyobj::attrib_t pcloud;
@@ -258,7 +259,7 @@ bool do_magic(OutData& outData)
 //#define PRINT_RIEMANNNIAN_GRAPH
 #ifdef PRINT_RIEMANNNIAN_GRAPH
 	std::cout << "\nRiemannian graph of centroids with w(u,v) = 1-|n_u . n_v| :" << std::endl;
-	printGraph(graph, nPoints, nPoints);
+	graph::printGraph(graph, nPoints, nPoints);
 #endif
 
 	// create the graph mst successor array
@@ -267,7 +268,7 @@ bool do_magic(OutData& outData)
 
 #ifdef PRINT_MST
 	std::cout << "\nMinimun spanning tree centroids with w(u,v) = 1-|n_u . n_v| :" << std::endl;
-	printMST(graphMst, nPoints, graph);
+	graph::printMst(graphMst, nPoints, graph, normals);
 #endif
 
 #ifdef SHOW_NORMALS
@@ -294,7 +295,7 @@ bool do_magic(OutData& outData)
 
 #ifdef PRINT_MST
 	std::cout << "\nMinimun spanning tree centroids with w(u,v) = 1-|n_u . n_v| :" << std::endl;
-	printMST(graphMst, nPoints, graph);
+	graph::printMst(graphMst, nPoints, graph, normals);
 #endif
 
 	// gather data for rendering
