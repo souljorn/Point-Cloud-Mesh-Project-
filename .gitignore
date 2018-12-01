@@ -336,3 +336,5 @@ ASALocalRun/
 !.libraries/
 !.PointClouds/
 !*.obj
+
+/imgui.ini
