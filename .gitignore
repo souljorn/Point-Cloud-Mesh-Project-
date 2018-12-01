@@ -332,6 +332,8 @@ ASALocalRun/
 # Local History for Visual Studio
 .localhistory/
 
+imgui.ini
+
 #Custom ignores
 !.libraries/
 !.PointClouds/
