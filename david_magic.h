@@ -24,7 +24,7 @@
 #include "david_constants.h"
 #include "david_kdtmanip.h"
 #include "david_graph.h"
-#include "cubesmagic.h"
+#include "david_cubes.h"
 
 // Tim's data collection structure
 #include "tim_outdata.h"
@@ -46,7 +46,7 @@ double signedDistance(alglib::real_1d_array& point, alglib::real_1d_array& norma
 
 
 
-OutData do_magic()
+bool do_magic(OutData& outData)
 {
 
 #ifdef OUTPUT_TO_FILE
@@ -59,7 +59,8 @@ OutData do_magic()
 	*	LOAD THE OBJ FILE
 	*/
 
-	std::string filename = cloudfile::getCloudPointFilename();
+	//std::string filename = cloudfile::getCloudPointFilename();
+	std::string filename = "xy.obj";
 	std::cout << "Loading " << filename << " wavefront file..." << std::endl;
 
 	tinyobj::attrib_t pcloud;
@@ -67,6 +68,7 @@ OutData do_magic()
 
 	if (!loaded) {
 		std::cerr << "ERROR: The OBJ file could not be loaded!" << std::endl;
+		return false;
 	}
 
 
@@ -89,7 +91,6 @@ OutData do_magic()
 	cloudfile::adaptDataPoints(pcloud.vertices, nPoints, points);
 
 	// struct to export data points
-	OutData outData;
 	outData.nPoints = nPoints;
 	outData.points = points;
 
@@ -309,9 +310,11 @@ OutData do_magic()
 	std::cout << normals.tostring(constants::psd) << std::endl;
 #endif
 	
-	// clean up memory
-	delete[] graphMst;
-	graph::deleteAdjMatrix(graph, nPoints);
+	outData.rGraph = graph;
 
-	return outData;
+	// clean up memory
+	// delete[] graphMst;
+	// graph::deleteAdjMatrix(graph, nPoints);
+
+	return true;
 }

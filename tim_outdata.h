@@ -29,7 +29,7 @@ struct KDTreeData {
 struct OutData
 {
 	//nPoints
-	size_t nPoints;
+	size_t nPoints = 0;
 
 	//Points
 	alglib::real_2d_array points;
@@ -39,4 +39,7 @@ struct OutData
 
 	//KD Tree Data
 	std::vector<KDTreeData> kdTreeData;
+
+	// Riemmanian Graph
+	double ** rGraph = nullptr;
 };

@@ -716,8 +716,14 @@ int main()
 	std::cout << "summed:" << summed << std::endl;
 	std::cout << "dot product:" << dotproduct << std::endl;*/
 
-	data = do_magic();
+	OutData data;
+	bool result = do_magic(data); // here is where the magic happens!
+
+	if (!result)
+		return 1;
 	
+
+
 	//instantiating the window
 	//---------------------------------------
 	glfwInit();
