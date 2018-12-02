@@ -551,6 +551,7 @@ void display(int windowWidth, int windowHeight,float rotateF,float sliderF,float
 
 	//Transparent Objects must be drawn last
 	//triangleTest->drawTriangle();
+	//adjacentMesh->drawLinesSequence(time,adjacentMesh->getNumIndices());
 	adjacentMesh->drawLines(0, 0, 0);
 
 	//---------------Link Matrices to Point Shader--------------------------------
