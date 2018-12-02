@@ -26,7 +26,10 @@
 #include "david_constants.h"
 #include "david_kdtmanip.h"
 #include "david_graph.h"
-#include "david_cubes.h"
+#include "david_cubes2.h"
+
+#include "libraries/meshgen/MeshReconstruction.h"
+#include "libraries/meshgen/IO.h"
 
 // Tim's data collection structure
 #include "tim_outdata.h"
@@ -34,6 +37,8 @@
 // tiny object loader
 #define TINYOBJLOADER_IMPLEMENTATIO
 #include "../tinyobj/tiny_obj_loader.h";
+
+
 
 
 
@@ -319,6 +324,8 @@ bool do_magic(OutData& outData)
 	outData.maxZ = globals::cubesData->mcMaxZ;
 
 
+	runMarchingCubes();
+
 
 
 
@@ -352,6 +359,11 @@ bool do_magic(OutData& outData)
 	// clean up memory
 	// delete[] graphMst;
 	// graph::deleteAdjMatrix(graph, nPoints);
+
+
+	
+
+
 
 	return true;
 }
