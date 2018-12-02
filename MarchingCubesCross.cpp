@@ -12,6 +12,9 @@
 //		For more efficient source code and tutorial on Marching Cubes please visit www.angelfire.com/linux/myp
 /////////////////////////////////////////////////////////////////////////////////////////////
 #include "MarchingCubesCross.h"
+#include <iostream>
+
+#define SHOW_GRID
 
 //Linear Interpolation function
 mpVector LinearInterp(mp4Vector p1, mp4Vector p2, float value)
@@ -33,7 +36,7 @@ TRIANGLE* MarchingCubesCross(int ncellsX, int ncellsY, int ncellsZ,
 							float minValue, mp4Vector * points, int &numTriangles)
 {
 	//this should be enough space, if not change 3 to 4
-	TRIANGLE * triangles = new TRIANGLE[3*ncellsX*ncellsY*ncellsZ];
+	TRIANGLE * triangles = new TRIANGLE[4*ncellsX*ncellsY*ncellsZ];
 	numTriangles = int(0);
 
 	int YtimeZ = (ncellsY+1)*(ncellsZ+1);	//for little extra speed
@@ -131,6 +134,23 @@ TRIANGLE* MarchingCubesCross(float mcMinX, float mcMaxX, float mcMinY, float mcM
 			}
 		}
 	}
+
+
+#ifdef SHOW_GRID
+	size_t n = (ncellsX + 1)*(ncellsY + 1)*(ncellsZ + 1);
+	std::cout << "CUBES GRID >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << std::endl;
+	for (size_t i = 0; i < n; i++)
+	{
+		std::cout << "v[" << i << "]" << "= [";
+		std::cout << mcDataPoints[i].x << ", ";
+		std::cout << mcDataPoints[i].y << ", ";
+		std::cout << mcDataPoints[i].z << ", ";
+		std::cout << mcDataPoints[i].val << "]";
+		std::cout << std::endl;
+	}
+	std::cout << "CUBES GRID <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" << std::endl;
+#endif
+
 	//then run Marching Cubes (version 1) on the data
 	return MarchingCubesCross(ncellsX, ncellsY, ncellsZ, minValue, mcDataPoints, numTriangles);
 }

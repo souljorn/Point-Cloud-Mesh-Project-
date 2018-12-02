@@ -18,10 +18,28 @@
 #include "mpVector.h"		//vector operations
 #include "MCTable.h"		//tables used by Marching Cubes (edgeTable and triTable)
 
+#include <string>
+#include <sstream>
+
+
 //used to save triangles - 3 vertices and a normal vector
 typedef struct {
 	mpVector p[3];
 	mpVector norm;
+
+	std::string tostr()
+	{
+		std::stringstream s;
+
+		s << "vertices: (";
+		s << p[0].operator char *() << ",";
+		s << p[1].operator char *() << ",";
+		s << p[2].operator char *() << ")";
+		s << " normal: ";
+		s << norm;
+
+		return s.str();
+	};
 } TRIANGLE;
 
 //does Linear Interpolation between points p1 and p2 (they already contain their computed values)
