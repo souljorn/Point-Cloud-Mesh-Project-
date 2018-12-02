@@ -384,9 +384,9 @@ void init()
 		std::cout << "," << vert.z;
 		std::cout << "," << std::endl;*/
 		
-		 normalsUnordered.at(i).x = scaleFactor * normalsUnordered.at(i).x + centroidPoints.at(i).x;
-		 normalsUnordered.at(i).y = scaleFactor * normalsUnordered.at(i).y + centroidPoints.at(i).y;
-		 normalsUnordered.at(i).z = scaleFactor * normalsUnordered.at(i).z + centroidPoints.at(i).z;
+		 normalsUnordered.at(i).x = 2 * normalsUnordered.at(i).x + centroidPoints.at(i).x;
+		 normalsUnordered.at(i).y = 2 * normalsUnordered.at(i).y + centroidPoints.at(i).y;
+		 normalsUnordered.at(i).z = 2 * normalsUnordered.at(i).z + centroidPoints.at(i).z;
 		
 		
 	/*	std::cout << "After:";
@@ -408,9 +408,9 @@ void init()
 	//Shift the normals to the centroids
 	for (int i = 0; i < normalOriented.size(); i++) {
 
-		normalOriented.at(i).x = scaleFactor * normalOriented.at(i).x + centroidPoints.at(i).x;
-		normalOriented.at(i).y = scaleFactor * normalOriented.at(i).y + centroidPoints.at(i).y;
-		normalOriented.at(i).z = scaleFactor * normalOriented.at(i).z + centroidPoints.at(i).z;
+		normalOriented.at(i).x = 2 * normalOriented.at(i).x + centroidPoints.at(i).x;
+		normalOriented.at(i).y = 2 * normalOriented.at(i).y + centroidPoints.at(i).y;
+		normalOriented.at(i).z = 2 * normalOriented.at(i).z + centroidPoints.at(i).z;
 	}
 
 	normalsOriented->createLines(centroidPoints, normalOriented);
@@ -558,8 +558,8 @@ void display(int windowWidth, int windowHeight,float rotateF,float sliderF,float
 
 	//Transparent Objects must be drawn last
 	//triangleTest->drawTriangle();
-	adjacentMesh->drawLinesSequenceGraph(time,adjacentMesh->getNumIndices());
-	//adjacentMesh->drawLines(0, 0, 0);
+	//adjacentMesh->drawLinesSequenceGraph(time,adjacentMesh->getNumIndices());
+	adjacentMesh->drawLines(0, 0, 0);
 
 	//---------------Link Matrices to Point Shader--------------------------------
 	pointShaderProgram->Use();
@@ -802,6 +802,11 @@ int main()
 	std::cout << "pm:" << pm.tostring(6) << std::endl;
 	std::cout << "summed:" << summed << std::endl;
 	std::cout << "dot product:" << dotproduct << std::endl;*/
+
+	globals::radius = 5.f;
+	globals::cubeEdge = 2.f;
+	globals::filename = "sphere.obj";
+
 
 	bool result = do_magic(data); // here is where the magic happens!
 

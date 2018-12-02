@@ -33,6 +33,9 @@
 
 #define BIG_FLOAT 10000000.f
 
+
+
+
 struct mcData {
 	float mcMinX;
 	float mcMaxX;
@@ -60,16 +63,18 @@ struct mcData {
 	}
 };
 
-
 namespace globals
 {
 	alglib::kdtree* kdtCentroids;
 	alglib::real_2d_array* normals;
 	alglib::real_2d_array* centroids;
 	mcData* cubesData;
-	double* radius;
+	double radius;
 	size_t dn = 0;
+	double cubeEdge = 0.0;
+	std::string filename;
 };
+
 
 
 alglib::real_1d_array Vec3_alglib(MeshReconstruction::Vec3 const& p)
@@ -95,7 +100,7 @@ MeshReconstruction::Vec3 alglib_Vec3(const alglib::real_1d_array& arr)
 
 bool getClosest(size_t& idx, alglib::real_1d_array& qP)
 {
-	double& r = *globals::radius;
+	double& r = globals::radius;
 	alglib::kdtree& kdt = *globals::kdtCentroids;
 	alglib::real_2d_array& normals = *globals::normals;
 
@@ -160,7 +165,7 @@ float formula(MeshReconstruction::Vec3 const& p)
 	size_t planeIdx;
 	double d;
 
-	double& r = *globals::radius;
+	double& r = globals::radius;
 	alglib::real_2d_array& o = *globals::centroids;
 	alglib::real_2d_array& n = *globals::normals;
 	
@@ -237,9 +242,9 @@ void runMarchingCubes()
 		d.mcMaxZ - d.mcMinZ + .5
 	};
 
-	double cube_edge = 0.05;
+	double cube_edge = 1.0;
 	MeshReconstruction::Vec3 cubeSize{ cube_edge,cube_edge,cube_edge };
 
 	auto mesh = MeshReconstruction::MarchCube(formula, domain, cubeSize);
-	WriteObjFile(mesh, "test2.obj");
+	WriteObjFile(mesh, "test3.obj");
 }
