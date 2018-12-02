@@ -44,7 +44,7 @@ double find_Mod(double a, double b);
 
 enum VAO_IDs { PointCloud, Lines, Grid, GridLines,
 	XYPlane, NormalsUO, QueryVao, NearestNeighborVAO, CentroidVAO,
-	NormalsOriented, TriangleTest, BoundingBoxVAO, NumVAOs };
+	NormalsOriented, TriangleTest, BoundingBoxVAO, AdjacentVAO, NumVAOs };
 GLuint  VAOs[NumVAOs];
 
 //Shader pointers
@@ -229,7 +229,7 @@ void parseData()
 		{	
 			if (data.rGraph[i][j] < DBL_MAX) {
 				setAdjacent.insert(std::make_pair(i, j));
-				std::cout << "(" << setAdjacent.find(std::make_pair(i, j))->first << ","<< setAdjacent.find(std::make_pair(i, j))->second << ")\n";
+				//std::cout << "(" << setAdjacent.find(std::make_pair(i, j))->first << ","<< setAdjacent.find(std::make_pair(i, j))->second << ")\n";
 			}
 		}  
 	}
@@ -367,12 +367,6 @@ void init()
 	std::cout << "," << data.maxY;
 	std::cout << "," << data.maxZ;
 	std::cout << "," << std::endl;
-	xzPlane->createGrid(16, -2.0f, 2.0f, -2.0f, 2.0f, Yaxis, DarkSlateGray);
-	xzPlane->createBuffers(VAOs[XYPlane]);
-
-	/*----------------------------------------------
-	//		Unoriented Normal Mesh
-	//----------------------------------------------*/
 
 	//Normal Mesh
 	normalsUO = new Mesh();
@@ -461,23 +455,17 @@ void init()
 	triangleTest->createTriangle(centroidPoints.at(0), centroidPoints.at(100), centroidPoints.at(200), Yellow);
 	triangleTest->createBufferTriangle(VAOs[TriangleTest]);
 
-	/*----------------------------------------------
-	//		Adjacent Point Mesh
-	//----------------------------------------------*/
-
-	//create Adjacent point mesh
-	adjacentMesh = new Mesh();
-	adjacentMesh->createLines(queryPoints, Orange, setAdjacent);
-	adjacentMesh->createBuffers(VAOs[AdjacentVAO]);
-
-
-
 	
 	
 	boundingBoxMesh = new Mesh();
 	boundingBoxMesh->createBoundingBox(scaleFactor *data.minX, scaleFactor * data.maxX, scaleFactor *data.minY, scaleFactor* data.maxY, scaleFactor *data.minZ, scaleFactor * data.maxZ, Teal);
 	boundingBoxMesh->createBuffers(VAOs[BoundingBoxVAO]);
 	std::cout << "Scale Factor:" << scaleFactor << std::endl;
+
+	adjacentMesh = new Mesh();
+	adjacentMesh->createLines(queryPoints, colors.at(60), setAdjacent);
+	adjacentMesh->createBuffers(VAOs[AdjacentVAO]);
+	
 	
 }
 
@@ -562,8 +550,6 @@ void display(int windowWidth, int windowHeight,float rotateF,float sliderF,float
 	//gridLines->drawLines(0, 0, 0);
 
 	//Transparent Objects must be drawn last
-	//triangleTest->drawTriangle();
-	//boundingBoxMesh->drawTriangles();
 	//triangleTest->drawTriangle();
 	adjacentMesh->drawLines(0, 0, 0);
 
