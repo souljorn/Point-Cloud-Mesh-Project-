@@ -7,6 +7,7 @@
 //#define PRINT_MST
 //#define SHOW_NORMALS
 
+
 #include <fstream>
 #include <iomanip>
 #include <windows.h>
@@ -304,9 +305,27 @@ bool do_magic(OutData& outData)
 
 
 
+
+
+
+
+	globals::cubesData = generateMcData(points, nPoints, kRadius);
+	// maxes and mines for timmy to scale the thing
+	outData.minX = globals::cubesData->mcMinX;
+	outData.maxX = globals::cubesData->mcMaxX;
+	outData.minY = globals::cubesData->mcMinY;
+	outData.maxY = globals::cubesData->mcMaxY;
+	outData.minZ = globals::cubesData->mcMinZ;
+	outData.maxZ = globals::cubesData->mcMaxZ;
+
+
+
+
+
+
 					//x,y,z
-	int cells[3] = { 10,10,10 };
-	globals::cubesData = generateMcData(points, nPoints, cells, kRadius);
+	/*int cells[3] = { 2,2,2 };
+	globals::cubesData = generateMcData(points, nPoints, kRadius);
 
 	// maxes and mines for timmy to scale the thing
 	outData.minX = globals::cubesData->mcMinX;
@@ -317,12 +336,18 @@ bool do_magic(OutData& outData)
 	outData.maxZ = globals::cubesData->mcMaxZ;
 
 	std::cout << globals::cubesData->tostr();
-	std::cout << "number of triangles:" << runMarchingCubes() << std::endl;
+
+	TRIANGLE *t;
+	int nt = runMarchingCubes(t);
+
+
+	std::cout << "number of triangles:" << nt << std::endl;
 	std::cout << "distance called:" << globals::dn << std::endl;
 
-
-
-
+	for (int i = 0; i < nt; i++)
+	{
+		std::cout << "T" << i << " " << t[i].tostr() << std::endl;
+	}*/
 
 	// clean up memory
 	// delete[] graphMst;

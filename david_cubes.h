@@ -139,22 +139,41 @@ float formula(mpVector p)
 	if (getClosest(planeIdx, qP))
 	{
 		d = signedDistance(n[planeIdx], o[planeIdx], qP.getcontent());
+		if (d >= 0.f && d < 0.0005) d += 0.0005;
+		if (d < 0.f && d > -0.0005) d -= 0.0005;
+
 		std::cout << "distance_a: " << d << " , plane: " << planeIdx << " at: [";
 		std::cout << o[planeIdx][0] << ", ";
 		std::cout << o[planeIdx][1] << ", ";
 		std::cout << o[planeIdx][2] << "] ";
+		std::cout << " with normal: [";
+		std::cout << n[planeIdx][0] << ", ";
+		std::cout << n[planeIdx][1] << ", ";
+		std::cout << n[planeIdx][2] << "] ";
 		std::cout << " queryPoint: " << qP.tostring(5) << std::endl;
 	}
 	else
 	{
 		d = r + 1.f;
-		std::cout << "distance_b:" << d << std::endl;
+		std::cout << "distance_b: " << d << std::endl;
 	}
 
 	globals::dn++;
-	return d;
+	return std::abs(d);
 }
 
+
+float Potential(mpVector p)
+{
+	mpVector dp1 = mpVector(0.0, -2.0, 0.0) - p;
+	mpVector dp2 = mpVector(0.0, 2.0, 0.0) - p;
+	mpVector dp3 = mpVector(2.0, 2.0, 0.0) - p;
+	mpVector dp4 = mpVector(0.0, 0.0, 4.0) - p;
+	mpVector dp5 = mpVector(-0.5, 3.1, -1.0) - p;
+	mpVector dp6 = mpVector(0.0, 0.0, -4.0) - p;
+	return 1 / dp1.Magnitude() + 1 / dp2.Magnitude() + 1 / dp3.Magnitude() + 1 / dp4.Magnitude() + 1 / dp5.Magnitude() +
+		1 / dp6.Magnitude();
+}
 
 
 
@@ -188,12 +207,39 @@ mcData* generateMcData(alglib::real_2d_array& points, size_t n, int cells[], flo
 	return data;
 }
 
-
-size_t runMarchingCubes()
+mcData* generateMcData(alglib::real_2d_array& points, size_t n, float minVal)
 {
-	TRIANGLE* t;
+	int cells[3] = { 0,0,0 };
+	
+	mcData* data = generateMcData(points, n, cells, minVal);
+	data->ncellsX = (data->mcMaxX - data->mcMinX) + 1;
+	data->ncellsY = (data->mcMaxY - data->mcMinY) + 1;
+	data->ncellsZ = (data->mcMaxZ - data->mcMinZ) + 1;
+
+	return data;
+}
+
+
+size_t runMarchingCubes(TRIANGLE *t)
+{
 	int numTriangles;
 	mcData& data = *globals::cubesData;
+
+	/* test override */
+	/*
+	data.mcMinX = -4.0;
+	data.mcMaxX = 5.0;
+	data.mcMinY = -8.0;
+	data.mcMaxY = 8.0;
+	data.mcMinZ = -8.0;
+	data.mcMaxZ = 8.0;
+	data.ncellsX = 20;
+	data.ncellsY = 20;
+	data.ncellsZ = 20;
+	data.minValue = 1.8f;
+	*/
+	
+	
 
 	t = MarchingCubesCross(
 		data.mcMinX,//float mcMinX, 
@@ -206,7 +252,7 @@ size_t runMarchingCubes()
 		data.ncellsY,//int ncellsY, 
 		data.ncellsZ,//int ncellsZ, 
 		data.minValue,//float minValue,
-		formula,//FORMULA formula, 
+		formula,//Potential,//FORMULA formula, 
 		numTriangles//int &numTriangles
 	); 
 
