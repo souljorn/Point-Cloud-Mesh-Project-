@@ -310,8 +310,26 @@ bool do_magic(OutData& outData)
 
 
 
+
+
+
+
+	globals::cubesData = generateMcData(points, nPoints, kRadius);
+	// maxes and mines for timmy to scale the thing
+	outData.minX = globals::cubesData->mcMinX;
+	outData.maxX = globals::cubesData->mcMaxX;
+	outData.minY = globals::cubesData->mcMinY;
+	outData.maxY = globals::cubesData->mcMaxY;
+	outData.minZ = globals::cubesData->mcMinZ;
+	outData.maxZ = globals::cubesData->mcMaxZ;
+
+
+
+
+
+
 					//x,y,z
-	int cells[3] = { 2,2,2 };
+	/*int cells[3] = { 2,2,2 };
 	globals::cubesData = generateMcData(points, nPoints, kRadius);
 
 	// maxes and mines for timmy to scale the thing
@@ -334,7 +352,7 @@ bool do_magic(OutData& outData)
 	for (int i = 0; i < nt; i++)
 	{
 		std::cout << "T" << i << " " << t[i].tostr() << std::endl;
-	}
+	}*/
 
 	// clean up memory
 	// delete[] graphMst;
