@@ -7,6 +7,7 @@
 //#define PRINT_MST
 //#define SHOW_NORMALS
 
+
 #include <fstream>
 #include <iomanip>
 #include <windows.h>
@@ -34,17 +35,6 @@
 #define TINYOBJLOADER_IMPLEMENTATIO
 #include "../tinyobj/tiny_obj_loader.h";
 
-double signedDistance(alglib::real_1d_array& point, alglib::real_1d_array& normal, alglib::real_1d_array& centroid, double radius)
-{
-	// compute z as the projection of p onto the closest plane
-	alglib::real_1d_array z;
-	z.setlength(constants::dims);
-
-	return 0.0;
-}
-
-
-
 
 
 bool do_magic(OutData& outData)
@@ -61,7 +51,7 @@ bool do_magic(OutData& outData)
 	*/
 
 	//std::string filename = cloudfile::getCloudPointFilename();
-	std::string filename = constants::cloudPointsBasePath + "red_pepper_down.obj";
+	std::string filename = constants::cloudPointsBasePath + "cube.obj";
 	std::cout << "Loading " << filename << " wavefront file..." << std::endl;
 
 	tinyobj::attrib_t pcloud;
@@ -108,8 +98,9 @@ bool do_magic(OutData& outData)
 	*
 	*/
 
-	double kRadius = 10.0f;	// this should be a function of 
+	double kRadius = 0.25f;	// this should be a function of 
 							// the density and noise of the point cloud
+	globals::radius = &kRadius;
 	outData.kRadius = kRadius;
 
 	std::cout << "Building an " << nPoints << " points kdtree using norm2 (euclidean)..." << std::endl;
@@ -123,10 +114,12 @@ bool do_magic(OutData& outData)
 
 	// indexed normals
 	alglib::real_2d_array normals;
+	globals::normals = &normals; // keep a reference for the signed distance
 	normals.setlength(nPoints, constants::dims);
 
 	// indexed centroids
 	alglib::real_2d_array centroids;
+	globals::centroids = &centroids;
 	centroids.setlength(nPoints, constants::dims);
 
 	// tags to centroid index
@@ -203,6 +196,7 @@ bool do_magic(OutData& outData)
 	std::cout << "Building Riemannian Graph of centroids..." << std::endl;
 
 	alglib::kdtree kdtCentroids;
+	globals::kdtCentroids = &kdtCentroids;
 	kdtmanip::buildTaggedKDTree(kdtCentroids, centroids, tagsCentroids, nPoints);
 
 	// keep tab of max normal z component
@@ -284,7 +278,6 @@ bool do_magic(OutData& outData)
 	normals[mstRootIdx][1] = 0.0;
 	normals[mstRootIdx][2] = 1.0;
 
-	std::cout << "before:" << mstRootIdx << std::endl;
 	for (size_t i = 0; i < nPoints; i++)
 	{
 		if (graphMst[i] == -1)
@@ -312,6 +305,54 @@ bool do_magic(OutData& outData)
 #endif
 	
 	outData.rGraph = graph;
+
+
+
+
+
+
+
+
+
+	globals::cubesData = generateMcData(points, nPoints, kRadius);
+	// maxes and mines for timmy to scale the thing
+	outData.minX = globals::cubesData->mcMinX;
+	outData.maxX = globals::cubesData->mcMaxX;
+	outData.minY = globals::cubesData->mcMinY;
+	outData.maxY = globals::cubesData->mcMaxY;
+	outData.minZ = globals::cubesData->mcMinZ;
+	outData.maxZ = globals::cubesData->mcMaxZ;
+
+
+
+
+
+
+					//x,y,z
+	/*int cells[3] = { 2,2,2 };
+	globals::cubesData = generateMcData(points, nPoints, kRadius);
+
+	// maxes and mines for timmy to scale the thing
+	outData.minX = globals::cubesData->mcMinX;
+	outData.maxX = globals::cubesData->mcMaxX;
+	outData.minY = globals::cubesData->mcMinY;
+	outData.maxY = globals::cubesData->mcMaxY;
+	outData.minZ = globals::cubesData->mcMinZ;
+	outData.maxZ = globals::cubesData->mcMaxZ;
+
+	std::cout << globals::cubesData->tostr();
+
+	TRIANGLE *t;
+	int nt = runMarchingCubes(t);
+
+
+	std::cout << "number of triangles:" << nt << std::endl;
+	std::cout << "distance called:" << globals::dn << std::endl;
+
+	for (int i = 0; i < nt; i++)
+	{
+		std::cout << "T" << i << " " << t[i].tostr() << std::endl;
+	}*/
 
 	// clean up memory
 	// delete[] graphMst;

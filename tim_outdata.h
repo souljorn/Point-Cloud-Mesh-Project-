@@ -42,4 +42,11 @@ struct OutData
 
 	// Riemmanian Graph
 	double ** rGraph = nullptr;
+
+	double minX;
+	double maxX;
+	double minY;
+	double maxY;
+	double minZ;
+	double maxZ;
 };
