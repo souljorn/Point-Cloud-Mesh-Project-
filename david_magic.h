@@ -51,7 +51,7 @@ bool do_magic(OutData& outData)
 	*/
 
 	//std::string filename = cloudfile::getCloudPointFilename();
-	std::string filename = constants::cloudPointsBasePath + "face.obj";
+	std::string filename = constants::cloudPointsBasePath + "CatPoints.obj";
 	std::cout << "Loading " << filename << " wavefront file..." << std::endl;
 
 	tinyobj::attrib_t pcloud;
