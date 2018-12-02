@@ -1,11 +1,11 @@
 #pragma once
 
 // adjust verbosity for debugging
-#define VERY_VERBOSE
-#define DISPLAY_POINT_PLANES
+//#define VERY_VERBOSE
+//#define DISPLAY_POINT_PLANES
 //#define OUTPUT_TO_FILE
-#define PRINT_MST
-#define SHOW_NORMALS
+//#define PRINT_MST
+//#define SHOW_NORMALS
 
 #include <fstream>
 #include <iomanip>

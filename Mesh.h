@@ -9,6 +9,8 @@
 #include <math.h>
 #include "Geometry.h"
 #include "colors.h"
+#include <set>
+#include <algorithm>
 
 //Definition to get error codes from openGL
 #define BUFFER_OFFSET(a) ((void*)(a))
@@ -17,6 +19,18 @@
 	x;\
 	ASSERT(GLLogCall(#x, __FILE__, __LINE__))
 
+
+//Custom Comparator for set data structure
+struct custom_comparator {
+	bool operator()(const std::pair<int, int>& a,
+		const std::pair<int, int>& b) const
+	{
+		return less_comparator(std::minmax(a.first, a.second),
+			std::minmax(b.first, b.second));
+	}
+
+	std::less<std::pair<int, int>> less_comparator;
+};
 //----------------------------------------------
 //		Globals
 //----------------------------------------------
@@ -297,6 +311,7 @@ public:
 	//Draw all lines in the mesh
 	void drawLines(GLint position, GLint colorIndex, unsigned int startingIndex)
 	{
+
 		GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_vbo_indices));
 		GLCall(glBindVertexArray(m_VAO));
 		GLCall(glDrawElements(GL_LINES, indices.size() * 2, GL_UNSIGNED_INT, (void*)0));
@@ -566,6 +581,25 @@ public:
 
 		faces.push_back(Faces(0, 1, 2));
 	}
+
+	void createLines(std::vector<Vertex> points, color color, std::set<std::pair<int, int>,struct custom_comparator> adjacentSet)
+	{
+
+		//Add all points for the mesh
+		for(auto point: points)
+		{
+			vertices.push_back(Vertex(point,color));
+		}
+
+		//create an iterator
+		std::set<std::pair<int, int>>::iterator it;
+
+		for (it = adjacentSet.begin(); it != adjacentSet.end(); ++it)
+		{
+			setIndices( it->first, it->second);
+		}
+		
+	} 
 
 	int getNumVertices() {
 		return vertices.size();

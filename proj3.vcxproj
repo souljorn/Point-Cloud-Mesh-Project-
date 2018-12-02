@@ -153,6 +153,9 @@
     <Text Include="PointClouds\face_partial.obj" />
   </ItemGroup>
   <ItemGroup>
+    <Object Include="PointClouds\CatPoints.obj">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </Object>
     <Object Include="PointClouds\red_pepper_down.obj">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </Object>
