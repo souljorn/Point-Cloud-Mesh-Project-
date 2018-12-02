@@ -313,6 +313,15 @@ public:
 	}
 
 	//Draw lines in sequence iterating through all lines in the mesh
+	void drawTriangles()
+	{
+		GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_vbo_indices));
+		GLCall(glBindVertexArray(m_VAO));
+		GLCall(glDrawElements(GL_TRIANGLES, getNumIndices(), GL_UNSIGNED_INT, (void*)0));
+		GLCall(glBindVertexArray(0));
+	}
+
+	//Draw lines in sequence iterating through all lines in the mesh
 	void drawLinesSequence(float time, int modFactor)
 	{
 		//Rendering sequenced
@@ -449,6 +458,84 @@ public:
 		
 	}
 
+	void createBoundingBox(float xMin, float xMax,float yMin, float yMax,float zMin, float zMax, color col)
+	{
+		color temp;
+		temp.x = col.x;
+		temp.y = col.y;
+		temp.x = col.z;
+		temp.a = .50f;
+
+		vertices.push_back(Vertex(xMin, yMin, zMin, Red.x, Red.y,Red.z, .50f)); //0
+		vertices.push_back(Vertex(xMax, yMin, zMin, Green.x, Green.y, Green.z, .50f)); //1
+		vertices.push_back(Vertex(xMax, yMax, zMin, WhiteSmoke.x, WhiteSmoke.y, WhiteSmoke.z, .50f)); //2
+		vertices.push_back(Vertex(xMin, yMax, zMin, Orange.x, Orange.y, Orange.z, .50f)); //3
+		
+		vertices.push_back(Vertex(xMax, yMin, zMax, WhiteSmoke.x, WhiteSmoke.y, WhiteSmoke.z, .50f)); //4
+		vertices.push_back(Vertex(xMin, yMin, zMax, WhiteSmoke.x, WhiteSmoke.y, WhiteSmoke.z, .50f)); //5
+		vertices.push_back(Vertex(xMin, yMax, zMax, WhiteSmoke.x, WhiteSmoke.y, WhiteSmoke.z, .50f)); //6
+		vertices.push_back(Vertex(xMax, yMax, zMax, WhiteSmoke.x, WhiteSmoke.y, WhiteSmoke.z, .50f)); //7
+
+		//indices
+
+		indices.push_back(0);
+		indices.push_back(1);
+		indices.push_back(2);
+		indices.push_back(2);
+		indices.push_back(3);
+		indices.push_back(0);
+
+		indices.push_back(1);
+		indices.push_back(5);
+		indices.push_back(6);
+		indices.push_back(6);
+		indices.push_back(2);
+		indices.push_back(1);
+
+		indices.push_back(4);
+		indices.push_back(0);
+		indices.push_back(3);
+		indices.push_back(3);
+		indices.push_back(7);
+		indices.push_back(4);
+
+		indices.push_back(4);
+		indices.push_back(5);
+		indices.push_back(1);
+		indices.push_back(1);
+		indices.push_back(0);
+		indices.push_back(4);
+
+		indices.push_back(3);
+		indices.push_back(2);
+		indices.push_back(6);
+		indices.push_back(6);
+		indices.push_back(7);
+		indices.push_back(3);
+
+
+		//Faces
+
+		//Front
+		//faces.push_back(Faces(1, 2, 0));
+		//faces.push_back(Faces(3, 0, 2));
+		//Back
+		/*faces.push_back(Faces(4, 5, 6));
+		faces.push_back(Faces(4, 6, 7));*/
+		////Left
+		//faces.push_back(Faces(1, 4, 7));
+		//faces.push_back(Faces(1, 7, 2));
+		////Right
+		//faces.push_back(Faces(5, 0, 3));
+		//faces.push_back(Faces(5, 3, 6));
+		////Top
+		//faces.push_back(Faces(3, 2, 7));
+		//faces.push_back(Faces(3, 7, 6));
+		////Bottom
+		//faces.push_back(Faces(5, 4, 1));
+		//faces.push_back(Faces(5, 1, 0));
+	
+	}
 	//Add points with out indicies
 	void addPoints(std::vector<Vertex> points, color color)
 	{
