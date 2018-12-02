@@ -36,6 +36,7 @@ struct custom_comparator {
 //----------------------------------------------
 enum Axis { Xaxis, Yaxis, Zaxis };
 static int delay = 0;
+static int graphIndex = 0;
 int oldDelay;
 
 //----------------------------------------------
@@ -337,15 +338,15 @@ public:
 	}
 
 	//Draw lines in sequence iterating through all lines in the mesh
-	void drawLinesSequence(float time, int modFactor)
+	void drawLinesSequenceGraph(float time, int modFactor)
 	{
 		//Rendering sequenced
-		delay = static_cast<unsigned int>(find_Mod(time * 50, modFactor));
+		graphIndex = static_cast<unsigned int>(find_Mod(time * 200, modFactor));
 		//std::cout << delay << std::endl;
 		//oldDelay != delay ? delay = delay + 1 : oldDelay = delay;
 		GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_vbo_indices));
 		GLCall(glBindVertexArray(m_VAO));
-		GLCall(glDrawElements(GL_LINES, delay, GL_UNSIGNED_INT, (void*)0));
+		GLCall(glDrawElements(GL_LINES, graphIndex, GL_UNSIGNED_INT, (void*)0));
 		GLCall(glBindVertexArray(0));
 		
 	}

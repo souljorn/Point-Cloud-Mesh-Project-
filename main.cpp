@@ -80,10 +80,13 @@ bool showGui = true;
 // set true to show oriented normals 
 bool normBool = false;
 bool autoBool = false; 
-bool manBool = false; 
+bool manBool = false;
+bool orientNorm = false;
+bool normBool1 = false;
 
 //Variable to set point size through out the project
 float PointSize = 3.0;
+float lengthNormals;
 int numLines;
 
 //Data object from algorithm header
@@ -106,6 +109,7 @@ float nearPlane = .10f;
 float farPlane = 50.0f;
 
 double scaleFactor;
+
 
 //----------------------------------------------
 // Shader ID's
@@ -533,7 +537,10 @@ void display(int windowWidth, int windowHeight,float rotateF,float sliderF,float
 	if (norm) {
 		normalsUO->drawLines(0, 0, 0);
 	}
-	normalsOriented->drawLines(0,0,0);
+	if (orientNorm) {
+		normalsOriented->drawLines(0, 0, 0);
+	}
+	
 	/*
 	if(progressBool){
 		// draw neighbor mesh with time 
@@ -543,7 +550,7 @@ void display(int windowWidth, int windowHeight,float rotateF,float sliderF,float
 	*/
 
 	centroidMesh->drawPoints();
-	normalsOriented->drawLines(0, 0, 0);
+	
 	nearestNeighborMesh->drawPointGroups(time, nearestNeighborMesh->indices.size(), nearestNeighborCount, NNGroupStartIndex, speed);
 	//pointCloud->drawPoints();
 	queryPointMesh->drawPoints();
@@ -551,8 +558,8 @@ void display(int windowWidth, int windowHeight,float rotateF,float sliderF,float
 
 	//Transparent Objects must be drawn last
 	//triangleTest->drawTriangle();
-	//adjacentMesh->drawLinesSequence(time,adjacentMesh->getNumIndices());
-	adjacentMesh->drawLines(0, 0, 0);
+	adjacentMesh->drawLinesSequenceGraph(time,adjacentMesh->getNumIndices());
+	//adjacentMesh->drawLines(0, 0, 0);
 
 	//---------------Link Matrices to Point Shader--------------------------------
 	pointShaderProgram->Use();
@@ -909,9 +916,9 @@ int main()
 					manBool = !manBool; 
 				ImGui::Text("Slider for speed of manual nearest neighbors progression");
 				ImGui::SliderFloat("2", &sliderF, 0.0f, 4.0f);
-				//ImGui::Text("Slider for speed of automatic nearest neighbors progression");
-				//ImGui::SliderFloat("3", &sliderS, 0.1f, 10.0f);
-				//speed += sliderS;
+				ImGui::Text("Slider for speed of automatic nearest neighbors progression");
+				ImGui::SliderFloat("3", &sliderS, 0.1f, 10.0f);
+				lengthNormals += sliderS;
 				if (ImGui::Button("auto speed (+)")) {
 					speed += 1;
 				} ImGui::SameLine();
@@ -931,12 +938,20 @@ int main()
 				//ImGui::Text("counter = %d", counter);
 				 
 				//ImGui::Checkbox("Normals", &normBool);
-				if (ImGui::Button("Oriented normals on/off"))
+				if (ImGui::Button("Un-oriented normals on/off"))
 					normBool = true;
 				// gotta reset the bool right after the norm is set or else it will spaz out 
 				if (normBool) {
 					norm = !norm;
 					normBool = !normBool;
+				}
+
+				if (ImGui::Button("Oriented normals on/off"))
+					normBool1 = true;
+				// gotta reset the bool right after the norm is set or else it will spaz out 
+				if (normBool1) {
+					orientNorm = !orientNorm;
+					normBool1 = !normBool1;
 				}
 
 				// zooming in/out 
