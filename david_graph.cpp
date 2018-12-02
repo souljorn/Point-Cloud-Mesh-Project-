@@ -28,7 +28,7 @@ void graph::printMst(size_t *parent, size_t n, double **graph, alglib::real_2d_a
 }
 
 
-size_t* graph::primMst(double **graph, const size_t n, size_t *parent)
+size_t* graph::primMst(double **graph, const size_t n, size_t *parent, size_t root)
 {
 	// book keeping 
 	double *key = new double[n];	// key values used to pick minimum weight edge in cut
@@ -41,8 +41,8 @@ size_t* graph::primMst(double **graph, const size_t n, size_t *parent)
 		mstSet[i] = false;
 	}
 
-	key[0] = 0.0;
-	parent[0] = -1;
+	key[root] = 0.0;
+	parent[root] = -1;
 
 	for (size_t count = 0; count < n - 1; count++)
 	{

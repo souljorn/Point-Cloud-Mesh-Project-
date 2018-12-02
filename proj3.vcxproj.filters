@@ -33,6 +33,18 @@
     <ClCompile Include="david_graph.cpp" />
     <ClCompile Include="mpVector.cpp" />
     <ClCompile Include="MarchingCubesCross.cpp" />
+    <ClCompile Include="libraries\meshgen\Cube.cpp">
+      <Filter>Libraries</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\meshgen\IO.cpp">
+      <Filter>Libraries</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\meshgen\MeshReconstruction.cpp">
+      <Filter>Libraries</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\meshgen\Triangulation.cpp">
+      <Filter>Libraries</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />
@@ -82,6 +94,22 @@
     <ClInclude Include="mpVector.h" />
     <ClInclude Include="MCTable.h" />
     <ClInclude Include="MarchingCubesCross.h" />
+    <ClInclude Include="libraries\meshgen\Cube.h">
+      <Filter>Libraries</Filter>
+    </ClInclude>
+    <ClInclude Include="libraries\meshgen\DataStructs.h">
+      <Filter>Libraries</Filter>
+    </ClInclude>
+    <ClInclude Include="libraries\meshgen\IO.h">
+      <Filter>Libraries</Filter>
+    </ClInclude>
+    <ClInclude Include="libraries\meshgen\MeshReconstruction.h">
+      <Filter>Libraries</Filter>
+    </ClInclude>
+    <ClInclude Include="libraries\meshgen\Triangulation.h">
+      <Filter>Libraries</Filter>
+    </ClInclude>
+    <ClInclude Include="david_cubes2.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="kernels\phong.frag" />
@@ -149,6 +177,9 @@
       <Filter>PointClouds</Filter>
     </None>
     <None Include="PointClouds\cube_low.obj">
+      <Filter>PointClouds</Filter>
+    </None>
+    <None Include="PointClouds\sphere.obj">
       <Filter>PointClouds</Filter>
     </None>
   </ItemGroup>
