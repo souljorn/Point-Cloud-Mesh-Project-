@@ -87,9 +87,10 @@ mpVector::operator mp4Vector() const
 	return mp4Vector(*this);
 }
 
+#include <iostream>
 mpVector::operator char*() const
 {
-	char *buffer = new char[100];
+	char *buffer = new char[300];
 	size_t n = sprintf(buffer, "(%f %f %f)", x, y, z);
 	return buffer;
 }
