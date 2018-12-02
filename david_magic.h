@@ -50,7 +50,7 @@ bool do_magic(OutData& outData)
 	*/
 
 	//std::string filename = cloudfile::getCloudPointFilename();
-	std::string filename = constants::cloudPointsBasePath + "cube.obj";
+	std::string filename = constants::cloudPointsBasePath + "face.obj";
 	std::cout << "Loading " << filename << " wavefront file..." << std::endl;
 
 	tinyobj::attrib_t pcloud;
@@ -60,9 +60,6 @@ bool do_magic(OutData& outData)
 		std::cerr << "ERROR: The OBJ file could not be loaded!" << std::endl;
 		return false;
 	}
-
-
-
 
 
 	/*
@@ -85,8 +82,6 @@ bool do_magic(OutData& outData)
 	outData.points = points;
 
 
-
-
 	/*
 	*	ESTIMATE PLANES
 	*
@@ -97,7 +92,7 @@ bool do_magic(OutData& outData)
 	*
 	*/
 
-	double kRadius = 0.25f;	// this should be a function of 
+	double kRadius = .45f;	// this should be a function of 
 							// the density and noise of the point cloud
 	globals::radius = &kRadius;
 	outData.kRadius = kRadius;
