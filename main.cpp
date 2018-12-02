@@ -40,7 +40,7 @@ double find_Mod(double a, double b);
 
 enum VAO_IDs { PointCloud, Lines, Grid, GridLines,
 	XYPlane, NormalsUO, QueryVao, NearestNeighborVAO, CentroidVAO,
-	NormalsOriented, TriangleTest, NumVAOs };
+	NormalsOriented, TriangleTest, BoundingBoxVAO, NumVAOs };
 GLuint  VAOs[NumVAOs];
 
 //Shader pointers
@@ -63,6 +63,7 @@ Mesh * nearestNeighborMesh1;
 Mesh * centroidMesh;
 Mesh * normalsOriented;
 Mesh * triangleTest;
+Mesh * boundingBoxMesh;
 
 
 //----------------------------------------------
@@ -97,6 +98,8 @@ bool norm = false;	//Norms on off boolean
 int speed = 8; //Used to speed up the NN-Animation with the O/P key
 float nearPlane = .10f;
 float farPlane = 50.0f;
+
+double scaleFactor;
 
 //----------------------------------------------
 // Shader ID's
@@ -266,10 +269,11 @@ void init()
 	glEnable(GL_POLYGON_SMOOTH);
 	//glCullFace(GL_FRONT);
 	glEnable(GL_MULTISAMPLE);
-
-	
-	
 	glPointSize(PointSize);
+
+	//Create a scale factor that takes into consideration the size of the model
+	scaleFactor = 12 / sqrt(pow((data.minX - data.maxX), 2) + pow((data.minY - data.maxY), 2) + pow((data.minZ - data.maxZ), 2));
+
 
 	//--------Load Shader-----------
 	static Shader basicShader("./Shaders/basic.vert", "./Shaders/basic.frag");
@@ -298,7 +302,7 @@ void init()
 	pointCloud = new Mesh();
 	//pointCloud->createPointCloud("./PointClouds/xy.obj");
 	//pointCloud->createBufferPoints(VAOs[PointCloud]);
-
+	
 	
 	square = new Mesh();
 	//square->createPoints(normalsUnordered, Red);
@@ -314,8 +318,20 @@ void init()
 
 	//xz plane creation
 	xzPlane = new Mesh();
-	//xzPlane->createGrid(16, -2.0f, 2.0f, -2.0f, 2.0f, Yaxis, DarkSlateGray);
-	//xzPlane->createBuffers(VAOs[XYPlane]);
+	xzPlane->createGrid(16, data.minX, data.maxX, data.minZ, data.maxZ, Yaxis, DarkSlateGray);
+	xzPlane->createBuffers(VAOs[XYPlane]);
+
+		std::cout << "Boundaries of Model Min:";
+	std::cout << "("<< data.minX;
+	std::cout << "," << data.minY;
+	std::cout << "," << data.minZ;
+	std::cout << "," << std::endl;
+
+	std::cout << "Boundaries of Model Max:";
+	std::cout << "(" << data.maxX;
+	std::cout << "," << data.maxY;
+	std::cout << "," << data.maxZ;
+	std::cout << "," << std::endl;
 
 	//Normal Mesh
 	normalsUO = new Mesh();
@@ -329,9 +345,9 @@ void init()
 		std::cout << "," << vert.z;
 		std::cout << "," << std::endl;*/
 		
-		 normalsUnordered.at(i).x = 10 * normalsUnordered.at(i).x + centroidPoints.at(i).x;
-		 normalsUnordered.at(i).y = 10 * normalsUnordered.at(i).y + centroidPoints.at(i).y;
-		 normalsUnordered.at(i).z = 10 * normalsUnordered.at(i).z + centroidPoints.at(i).z;
+		 normalsUnordered.at(i).x = scaleFactor * normalsUnordered.at(i).x + centroidPoints.at(i).x;
+		 normalsUnordered.at(i).y = scaleFactor * normalsUnordered.at(i).y + centroidPoints.at(i).y;
+		 normalsUnordered.at(i).z = scaleFactor * normalsUnordered.at(i).z + centroidPoints.at(i).z;
 		
 		
 	/*	std::cout << "After:";
@@ -348,9 +364,9 @@ void init()
 	//Shift the normals to the centroids
 	for (int i = 0; i < normalOriented.size(); i++) {
 
-		normalOriented.at(i).x = 10 * normalOriented.at(i).x + centroidPoints.at(i).x;
-		normalOriented.at(i).y = 10 * normalOriented.at(i).y + centroidPoints.at(i).y;
-		normalOriented.at(i).z = 10 * normalOriented.at(i).z + centroidPoints.at(i).z;
+		normalOriented.at(i).x = scaleFactor * normalOriented.at(i).x + centroidPoints.at(i).x;
+		normalOriented.at(i).y = scaleFactor * normalOriented.at(i).y + centroidPoints.at(i).y;
+		normalOriented.at(i).z = scaleFactor * normalOriented.at(i).z + centroidPoints.at(i).z;
 	}
 
 	normalsOriented->createLines(centroidPoints, normalOriented);
@@ -389,6 +405,14 @@ void init()
 	triangleTest = new Mesh();
 	triangleTest->createTriangle(centroidPoints.at(0), centroidPoints.at(100), centroidPoints.at(200), Yellow);
 	triangleTest->createBufferTriangle(VAOs[TriangleTest]);
+
+	
+	
+	boundingBoxMesh = new Mesh();
+	boundingBoxMesh->createBoundingBox(scaleFactor *data.minX, scaleFactor * data.maxX, scaleFactor *data.minY, scaleFactor* data.maxY, scaleFactor *data.minZ, scaleFactor * data.maxZ, Teal);
+	boundingBoxMesh->createBuffers(VAOs[BoundingBoxVAO]);
+	std::cout << "Scale Factor:" << scaleFactor << std::endl;
+	
 }
 
 //----------------------------------------------
@@ -426,7 +450,7 @@ void display(int windowWidth, int windowHeight,float rotateF,float sliderF,float
 
 	// Model matrix : an identity matrix (model will be at the origin)
 	glm::mat4 modelGrid = glm::mat4(1.0f);
-	modelGrid = glm::scale(modelGrid, glm::vec3(.002, .002, .002));
+	modelGrid = glm::scale(modelGrid, glm::vec3(scaleFactor  *  .02, scaleFactor * .02, scaleFactor * .02));
 	modelGrid = glm::translate(modelGrid, glm::vec3(0, 0, 0));
 	modelGrid = glm::rotate(modelGrid, rotateF * 5, glm::vec3(0, 1.0f, 0.1f));
 
@@ -472,7 +496,8 @@ void display(int windowWidth, int windowHeight,float rotateF,float sliderF,float
 	//gridLines->drawLines(0, 0, 0);
 
 	//Transparent Objects must be drawn last
-	triangleTest->drawTriangle();
+	//triangleTest->drawTriangle();
+	//boundingBoxMesh->drawTriangles();
 
 	//---------------Link Matrices to Point Shader--------------------------------
 	pointShaderProgram->Use();

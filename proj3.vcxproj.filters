@@ -175,5 +175,8 @@
     <Object Include="PointClouds\red_pepper_down.obj">
       <Filter>PointClouds</Filter>
     </Object>
+    <Object Include="PointClouds\CatPoints.obj">
+      <Filter>PointClouds</Filter>
+    </Object>
   </ItemGroup>
 </Project>
