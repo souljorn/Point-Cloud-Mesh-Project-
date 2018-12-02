@@ -142,6 +142,9 @@
     <None Include="Shaders\point.vert">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="PointClouds\cube.obj">
+      <Filter>PointClouds</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Shaders">
