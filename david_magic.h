@@ -56,6 +56,7 @@ bool do_magic(OutData& outData)
 	*/
 
 	//std::string filename = cloudfile::getCloudPointFilename();
+
 	std::string filename = constants::cloudPointsBasePath + "CatPoints.obj";
 	std::cout << "Loading " << filename << " wavefront file..." << std::endl;
 
@@ -315,6 +316,7 @@ bool do_magic(OutData& outData)
 
 
 	globals::cubesData = generateMcData(points, nPoints, kRadius);
+	
 	// maxes and mines for timmy to scale the thing
 	outData.minX = globals::cubesData->mcMinX;
 	outData.maxX = globals::cubesData->mcMaxX;
@@ -322,7 +324,6 @@ bool do_magic(OutData& outData)
 	outData.maxY = globals::cubesData->mcMaxY;
 	outData.minZ = globals::cubesData->mcMinZ;
 	outData.maxZ = globals::cubesData->mcMaxZ;
-
 
 	runMarchingCubes();
 
