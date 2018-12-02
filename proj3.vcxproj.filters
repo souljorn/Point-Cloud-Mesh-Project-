@@ -179,6 +179,9 @@
     <None Include="PointClouds\cube_low.obj">
       <Filter>PointClouds</Filter>
     </None>
+    <None Include="PointClouds\sphere.obj">
+      <Filter>PointClouds</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Shaders">
@@ -201,6 +204,9 @@
   </ItemGroup>
   <ItemGroup>
     <Object Include="PointClouds\red_pepper_down.obj">
+      <Filter>PointClouds</Filter>
+    </Object>
+    <Object Include="PointClouds\CatPoints.obj">
       <Filter>PointClouds</Filter>
     </Object>
   </ItemGroup>

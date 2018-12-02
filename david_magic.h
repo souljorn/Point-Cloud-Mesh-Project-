@@ -56,7 +56,7 @@ bool do_magic(OutData& outData)
 	*/
 
 	//std::string filename = cloudfile::getCloudPointFilename();
-	std::string filename = constants::cloudPointsBasePath + "cube.obj";
+	std::string filename = constants::cloudPointsBasePath + globals::filename;
 	std::cout << "Loading " << filename << " wavefront file..." << std::endl;
 
 	tinyobj::attrib_t pcloud;
@@ -66,9 +66,6 @@ bool do_magic(OutData& outData)
 		std::cerr << "ERROR: The OBJ file could not be loaded!" << std::endl;
 		return false;
 	}
-
-
-
 
 
 	/*
@@ -91,8 +88,6 @@ bool do_magic(OutData& outData)
 	outData.points = points;
 
 
-
-
 	/*
 	*	ESTIMATE PLANES
 	*
@@ -103,9 +98,9 @@ bool do_magic(OutData& outData)
 	*
 	*/
 
-	double kRadius = 0.5f;	// this should be a function of 
-							// the density and noise of the point cloud
-	globals::radius = &kRadius;
+
+	double kRadius = globals::radius;	// this should be a function of 
+										// the density and noise of the point cloud
 	outData.kRadius = kRadius;
 
 	std::cout << "Building an " << nPoints << " points kdtree using norm2 (euclidean)..." << std::endl;
@@ -321,7 +316,9 @@ bool do_magic(OutData& outData)
 
 
 	globals::cubesData = generateMcData(points, nPoints, kRadius);
-	
+
+	std::cout << globals::cubesData->tostr() << std::endl;
+
 	// maxes and mines for timmy to scale the thing
 	outData.minX = globals::cubesData->mcMinX;
 	outData.maxX = globals::cubesData->mcMaxX;

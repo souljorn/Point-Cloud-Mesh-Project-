@@ -9,6 +9,8 @@
 #include <math.h>
 #include "Geometry.h"
 #include "colors.h"
+#include <set>
+#include <algorithm>
 
 //Definition to get error codes from openGL
 #define BUFFER_OFFSET(a) ((void*)(a))
@@ -17,11 +19,24 @@
 	x;\
 	ASSERT(GLLogCall(#x, __FILE__, __LINE__))
 
+
+//Custom Comparator for set data structure
+struct custom_comparator {
+	bool operator()(const std::pair<int, int>& a,
+		const std::pair<int, int>& b) const
+	{
+		return less_comparator(std::minmax(a.first, a.second),
+			std::minmax(b.first, b.second));
+	}
+
+	std::less<std::pair<int, int>> less_comparator;
+};
 //----------------------------------------------
 //		Globals
 //----------------------------------------------
 enum Axis { Xaxis, Yaxis, Zaxis };
 static int delay = 0;
+static int graphIndex = 0;
 int oldDelay;
 
 //----------------------------------------------
@@ -297,6 +312,7 @@ public:
 	//Draw all lines in the mesh
 	void drawLines(GLint position, GLint colorIndex, unsigned int startingIndex)
 	{
+
 		GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_vbo_indices));
 		GLCall(glBindVertexArray(m_VAO));
 		GLCall(glDrawElements(GL_LINES, indices.size() * 2, GL_UNSIGNED_INT, (void*)0));
@@ -313,15 +329,24 @@ public:
 	}
 
 	//Draw lines in sequence iterating through all lines in the mesh
-	void drawLinesSequence(float time, int modFactor)
+	void drawTriangles()
+	{
+		GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_vbo_indices));
+		GLCall(glBindVertexArray(m_VAO));
+		GLCall(glDrawElements(GL_TRIANGLES, getNumIndices(), GL_UNSIGNED_INT, (void*)0));
+		GLCall(glBindVertexArray(0));
+	}
+
+	//Draw lines in sequence iterating through all lines in the mesh
+	void drawLinesSequenceGraph(float time, int modFactor)
 	{
 		//Rendering sequenced
-		delay = static_cast<unsigned int>(find_Mod(time * 50, modFactor));
+		graphIndex = static_cast<unsigned int>(find_Mod(time * 200, modFactor));
 		//std::cout << delay << std::endl;
 		//oldDelay != delay ? delay = delay + 1 : oldDelay = delay;
 		GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_vbo_indices));
 		GLCall(glBindVertexArray(m_VAO));
-		GLCall(glDrawElements(GL_LINES, delay, GL_UNSIGNED_INT, (void*)0));
+		GLCall(glDrawElements(GL_LINES, graphIndex, GL_UNSIGNED_INT, (void*)0));
 		GLCall(glBindVertexArray(0));
 		
 	}
@@ -449,6 +474,84 @@ public:
 		
 	}
 
+	void createBoundingBox(float xMin, float xMax,float yMin, float yMax,float zMin, float zMax, color col)
+	{
+		color temp;
+		temp.x = col.x;
+		temp.y = col.y;
+		temp.x = col.z;
+		temp.a = .50f;
+
+		vertices.push_back(Vertex(xMin, yMin, zMin, Red.x, Red.y,Red.z, .50f)); //0
+		vertices.push_back(Vertex(xMax, yMin, zMin, Green.x, Green.y, Green.z, .50f)); //1
+		vertices.push_back(Vertex(xMax, yMax, zMin, WhiteSmoke.x, WhiteSmoke.y, WhiteSmoke.z, .50f)); //2
+		vertices.push_back(Vertex(xMin, yMax, zMin, Orange.x, Orange.y, Orange.z, .50f)); //3
+		
+		vertices.push_back(Vertex(xMax, yMin, zMax, WhiteSmoke.x, WhiteSmoke.y, WhiteSmoke.z, .50f)); //4
+		vertices.push_back(Vertex(xMin, yMin, zMax, WhiteSmoke.x, WhiteSmoke.y, WhiteSmoke.z, .50f)); //5
+		vertices.push_back(Vertex(xMin, yMax, zMax, WhiteSmoke.x, WhiteSmoke.y, WhiteSmoke.z, .50f)); //6
+		vertices.push_back(Vertex(xMax, yMax, zMax, WhiteSmoke.x, WhiteSmoke.y, WhiteSmoke.z, .50f)); //7
+
+		//indices
+
+		indices.push_back(0);
+		indices.push_back(1);
+		indices.push_back(2);
+		indices.push_back(2);
+		indices.push_back(3);
+		indices.push_back(0);
+
+		indices.push_back(1);
+		indices.push_back(5);
+		indices.push_back(6);
+		indices.push_back(6);
+		indices.push_back(2);
+		indices.push_back(1);
+
+		indices.push_back(4);
+		indices.push_back(0);
+		indices.push_back(3);
+		indices.push_back(3);
+		indices.push_back(7);
+		indices.push_back(4);
+
+		indices.push_back(4);
+		indices.push_back(5);
+		indices.push_back(1);
+		indices.push_back(1);
+		indices.push_back(0);
+		indices.push_back(4);
+
+		indices.push_back(3);
+		indices.push_back(2);
+		indices.push_back(6);
+		indices.push_back(6);
+		indices.push_back(7);
+		indices.push_back(3);
+
+
+		//Faces
+
+		//Front
+		//faces.push_back(Faces(1, 2, 0));
+		//faces.push_back(Faces(3, 0, 2));
+		//Back
+		/*faces.push_back(Faces(4, 5, 6));
+		faces.push_back(Faces(4, 6, 7));*/
+		////Left
+		//faces.push_back(Faces(1, 4, 7));
+		//faces.push_back(Faces(1, 7, 2));
+		////Right
+		//faces.push_back(Faces(5, 0, 3));
+		//faces.push_back(Faces(5, 3, 6));
+		////Top
+		//faces.push_back(Faces(3, 2, 7));
+		//faces.push_back(Faces(3, 7, 6));
+		////Bottom
+		//faces.push_back(Faces(5, 4, 1));
+		//faces.push_back(Faces(5, 1, 0));
+	
+	}
 	//Add points with out indicies
 	void addPoints(std::vector<Vertex> points, color color)
 	{
@@ -566,6 +669,25 @@ public:
 
 		faces.push_back(Faces(0, 1, 2));
 	}
+
+	void createLines(std::vector<Vertex> points, color color, std::set<std::pair<int, int>,struct custom_comparator> adjacentSet)
+	{
+
+		//Add all points for the mesh
+		for(auto point: points)
+		{
+			vertices.push_back(Vertex(point,color));
+		}
+
+		//create an iterator
+		std::set<std::pair<int, int>>::iterator it;
+
+		for (it = adjacentSet.begin(); it != adjacentSet.end(); ++it)
+		{
+			setIndices( it->first, it->second);
+		}
+		
+	} 
 
 	int getNumVertices() {
 		return vertices.size();

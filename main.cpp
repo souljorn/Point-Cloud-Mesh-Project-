@@ -32,15 +32,19 @@
  *
  ****************************************/
 
+
+
+//Forward declarations
 class Mesh;
 double find_Mod(double a, double b);
+
 //----------------------------------------------
 //		VAO/VBO/EBO 
 //----------------------------------------------
 
 enum VAO_IDs { PointCloud, Lines, Grid, GridLines,
 	XYPlane, NormalsUO, QueryVao, NearestNeighborVAO, CentroidVAO,
-	NormalsOriented, TriangleTest, NumVAOs };
+	NormalsOriented, TriangleTest, BoundingBoxVAO, AdjacentVAO, NumVAOs };
 GLuint  VAOs[NumVAOs];
 
 //Shader pointers
@@ -63,6 +67,8 @@ Mesh * nearestNeighborMesh1;
 Mesh * centroidMesh;
 Mesh * normalsOriented;
 Mesh * triangleTest;
+Mesh * adjacentMesh;
+Mesh * boundingBoxMesh;
 
 
 //----------------------------------------------
@@ -74,10 +80,13 @@ bool showGui = true;
 // set true to show oriented normals 
 bool normBool = false;
 bool autoBool = false; 
-bool manBool = false; 
+bool manBool = false;
+bool orientNorm = false;
+bool normBool1 = false;
 
 //Variable to set point size through out the project
 float PointSize = 3.0;
+float lengthNormals;
 int numLines;
 
 //Data object from algorithm header
@@ -92,11 +101,15 @@ std::vector<Vertex> centroidPoints;
 std::vector<int> tagData;
 std::vector<unsigned int> nearestNeighborCount;
 std::vector<unsigned int> NNGroupStartIndex;
+std::set<std::pair<int, int>, custom_comparator> setAdjacent;
 
 bool norm = false;	//Norms on off boolean
 int speed = 8; //Used to speed up the NN-Animation with the O/P key
 float nearPlane = .10f;
 float farPlane = 50.0f;
+
+double scaleFactor;
+
 
 //----------------------------------------------
 // Shader ID's
@@ -176,8 +189,20 @@ void cleanUp()
 	
 }
 
-//Parse Data from algorithm header
+//Create planes From Normal and point
+void createPlaneEq()
+{
+	Vertex normal(0.0f, 1.0f, 0.0f);
+	Vertex pointOnPlane(0.0f, 1.0f, 1.0f);
 
+	double constantNum = normal.x * pointOnPlane.x + normal.y * pointOnPlane.y +
+		normal.z + pointOnPlane.z;
+
+	
+}
+
+
+//Parse Data from algorithm header
 void parseData()
 {
 	double *norm;
@@ -199,6 +224,21 @@ void parseData()
 		i++;*/
 	}
 
+	
+	
+	//Get a list of all adjavcent Pairs
+	for(int i =0; i < data.nPoints; i++)
+	{
+		for (int j = 0; j < data.nPoints; j++)
+		{	
+			if (data.rGraph[i][j] < DBL_MAX) {
+				setAdjacent.insert(std::make_pair(i, j));
+				//std::cout << "(" << setAdjacent.find(std::make_pair(i, j))->first << ","<< setAdjacent.find(std::make_pair(i, j))->second << ")\n";
+			}
+		}  
+	}
+	std::cout << setAdjacent.size() << std::endl;
+
 	for (int i = 0; i < data.nPoints ; i++) {
 		
 		//Nearest Neighbor
@@ -214,6 +254,7 @@ void parseData()
 		nearestNeighborCount.push_back(rows);
 		NNGroupStartIndex.push_back(rows + NNGroupStartIndex.at(i));
 		//std::cout << "Start Numbers::" << NNGroupStartIndex.back() << std::endl;
+		
 		//Get norms
 		norm = data.kdTreeData.at(i).normal.getcontent();
 		normOriented = data.kdTreeData.at(i).normalOriented.getcontent();
@@ -221,6 +262,7 @@ void parseData()
 	
 		normalsUnordered.push_back(Vertex((float)norm[0] , (float)norm[1], (float)norm[2] , Violet));
 		normalOriented.push_back(Vertex((float)normOriented[0], (float)normOriented[1], (float)normOriented[2], Green));
+		
 		//Query Points
 		qp = data.kdTreeData.at(i).queryPoint.getcontent();
 		queryPoints.push_back(Vertex((float)qp[0], (float)qp[1], (float)qp[2], Violet));
@@ -266,10 +308,11 @@ void init()
 	glEnable(GL_POLYGON_SMOOTH);
 	//glCullFace(GL_FRONT);
 	glEnable(GL_MULTISAMPLE);
-
-	
-	
 	glPointSize(PointSize);
+
+	//Create a scale factor that takes into consideration the size of the model
+	scaleFactor = 12 / sqrt(pow((data.minX - data.maxX), 2) + pow((data.minY - data.maxY), 2) + pow((data.minZ - data.maxZ), 2));
+
 
 	//--------Load Shader-----------
 	static Shader basicShader("./Shaders/basic.vert", "./Shaders/basic.frag");
@@ -298,7 +341,7 @@ void init()
 	pointCloud = new Mesh();
 	//pointCloud->createPointCloud("./PointClouds/xy.obj");
 	//pointCloud->createBufferPoints(VAOs[PointCloud]);
-
+	
 	
 	square = new Mesh();
 	//square->createPoints(normalsUnordered, Red);
@@ -308,14 +351,26 @@ void init()
 	//grid->createGrid(4, .0f, 0.5f, 0.0f, 0.5f, Zaxis, Orange);
 	//grid->createBufferPoints(VAOs[Grid]);
 
-	gridLines = new Mesh();
+	//gridLines = new Mesh();
 	//gridLines->createGrid(4, .0f, 0.5f, 0.0f, 0.5f, Zaxis, Blue);
 	//gridLines->createBuffers(VAOs[GridLines]);
 
 	//xz plane creation
 	xzPlane = new Mesh();
-	//xzPlane->createGrid(16, -2.0f, 2.0f, -2.0f, 2.0f, Yaxis, DarkSlateGray);
-	//xzPlane->createBuffers(VAOs[XYPlane]);
+	xzPlane->createGrid(16, data.minX, data.maxX, data.minZ, data.maxZ, Yaxis, DarkSlateGray);
+	xzPlane->createBuffers(VAOs[XYPlane]);
+
+		std::cout << "Boundaries of Model Min:";
+	std::cout << "("<< data.minX;
+	std::cout << "," << data.minY;
+	std::cout << "," << data.minZ;
+	std::cout << "," << std::endl;
+
+	std::cout << "Boundaries of Model Max:";
+	std::cout << "(" << data.maxX;
+	std::cout << "," << data.maxY;
+	std::cout << "," << data.maxZ;
+	std::cout << "," << std::endl;
 
 	//Normal Mesh
 	normalsUO = new Mesh();
@@ -329,9 +384,9 @@ void init()
 		std::cout << "," << vert.z;
 		std::cout << "," << std::endl;*/
 		
-		 normalsUnordered.at(i).x = 10 * normalsUnordered.at(i).x + centroidPoints.at(i).x;
-		 normalsUnordered.at(i).y = 10 * normalsUnordered.at(i).y + centroidPoints.at(i).y;
-		 normalsUnordered.at(i).z = 10 * normalsUnordered.at(i).z + centroidPoints.at(i).z;
+		 normalsUnordered.at(i).x = 2 * normalsUnordered.at(i).x + centroidPoints.at(i).x;
+		 normalsUnordered.at(i).y = 2 * normalsUnordered.at(i).y + centroidPoints.at(i).y;
+		 normalsUnordered.at(i).z = 2 * normalsUnordered.at(i).z + centroidPoints.at(i).z;
 		
 		
 	/*	std::cout << "After:";
@@ -344,24 +399,35 @@ void init()
 	normalsUO->createLines(centroidPoints, normalsUnordered);
 	normalsUO->createBuffers(VAOs[NormalsUO]);
 
+
+	/*----------------------------------------------
+	//		Oriented Normal Mesh
+	//----------------------------------------------*/
+
 	normalsOriented = new Mesh();
 	//Shift the normals to the centroids
 	for (int i = 0; i < normalOriented.size(); i++) {
 
-		normalOriented.at(i).x = 10 * normalOriented.at(i).x + centroidPoints.at(i).x;
-		normalOriented.at(i).y = 10 * normalOriented.at(i).y + centroidPoints.at(i).y;
-		normalOriented.at(i).z = 10 * normalOriented.at(i).z + centroidPoints.at(i).z;
+		normalOriented.at(i).x = 2 * normalOriented.at(i).x + centroidPoints.at(i).x;
+		normalOriented.at(i).y = 2 * normalOriented.at(i).y + centroidPoints.at(i).y;
+		normalOriented.at(i).z = 2 * normalOriented.at(i).z + centroidPoints.at(i).z;
 	}
 
 	normalsOriented->createLines(centroidPoints, normalOriented);
 	normalsOriented->createBuffers(VAOs[NormalsOriented]);
 
-	//Query Point Mesh
+	/*----------------------------------------------
+	//		Query Point Mesh
+	//----------------------------------------------*/
+
 	queryPointMesh = new Mesh();
 	queryPointMesh->createPoints(queryPoints, GhostWhite);
 	queryPointMesh->createBufferPoints(VAOs[QueryVao]);
 
-	//Nearest Neighbor Mesh
+	/*----------------------------------------------
+	//		Nearest Neighbor Mesh
+	//----------------------------------------------*/
+
 	nearestNeighborMesh = new Mesh();
 	int start = 0;
 	int end = 0;
@@ -380,7 +446,10 @@ void init()
 	//printf("count:%d\n", nearestNeighborMesh->vertices.size());
 	nearestNeighborMesh->createBuffersPointsGroups(VAOs[NearestNeighborVAO]);
 
-	//Create Centroid Mesh
+	/*----------------------------------------------
+	//		Centroid Mesh
+	//----------------------------------------------*/
+	
 	centroidMesh = new Mesh();
 	centroidMesh->createPoints(centroidPoints, Orange);
 	centroidMesh->createBufferPoints(VAOs[CentroidVAO]);
@@ -389,6 +458,19 @@ void init()
 	triangleTest = new Mesh();
 	triangleTest->createTriangle(centroidPoints.at(0), centroidPoints.at(100), centroidPoints.at(200), Yellow);
 	triangleTest->createBufferTriangle(VAOs[TriangleTest]);
+
+	
+	
+	boundingBoxMesh = new Mesh();
+	boundingBoxMesh->createBoundingBox(scaleFactor *data.minX, scaleFactor * data.maxX, scaleFactor *data.minY, scaleFactor* data.maxY, scaleFactor *data.minZ, scaleFactor * data.maxZ, Teal);
+	boundingBoxMesh->createBuffers(VAOs[BoundingBoxVAO]);
+	std::cout << "Scale Factor:" << scaleFactor << std::endl;
+
+	adjacentMesh = new Mesh();
+	adjacentMesh->createLines(queryPoints, colors.at(60), setAdjacent);
+	adjacentMesh->createBuffers(VAOs[AdjacentVAO]);
+	
+	
 }
 
 //----------------------------------------------
@@ -426,7 +508,7 @@ void display(int windowWidth, int windowHeight,float rotateF,float sliderF,float
 
 	// Model matrix : an identity matrix (model will be at the origin)
 	glm::mat4 modelGrid = glm::mat4(1.0f);
-	modelGrid = glm::scale(modelGrid, glm::vec3(.002, .002, .002));
+	modelGrid = glm::scale(modelGrid, glm::vec3(scaleFactor  *  .02, scaleFactor * .02, scaleFactor * .02));
 	modelGrid = glm::translate(modelGrid, glm::vec3(0, 0, 0));
 	modelGrid = glm::rotate(modelGrid, rotateF * 5, glm::vec3(0, 1.0f, 0.1f));
 
@@ -450,12 +532,15 @@ void display(int windowWidth, int windowHeight,float rotateF,float sliderF,float
 	//----------Mesh Draw Calls for The XY PLANE/NEAREST NEIGHBOR/CENTROID/NORMALS------------------------------------
 	//gridLines->drawLinesSequence(time, gridLines->getNumIndices() + 1);
 	//grid->drawPoints();
-	//xzPlane->drawLines(0, 0, 0);
+	xzPlane->drawLines(0, 0, 0);
 	//Turn Normals on/off with N key
 	if (norm) {
 		normalsUO->drawLines(0, 0, 0);
 	}
-	normalsOriented->drawLines(0,0,0);
+	if (orientNorm) {
+		normalsOriented->drawLines(0, 0, 0);
+	}
+	
 	/*
 	if(progressBool){
 		// draw neighbor mesh with time 
@@ -465,14 +550,16 @@ void display(int windowWidth, int windowHeight,float rotateF,float sliderF,float
 	*/
 
 	centroidMesh->drawPoints();
-	normalsOriented->drawLines(0, 0, 0);
+	
 	nearestNeighborMesh->drawPointGroups(time, nearestNeighborMesh->indices.size(), nearestNeighborCount, NNGroupStartIndex, speed);
 	//pointCloud->drawPoints();
 	queryPointMesh->drawPoints();
 	//gridLines->drawLines(0, 0, 0);
 
 	//Transparent Objects must be drawn last
-	triangleTest->drawTriangle();
+	//triangleTest->drawTriangle();
+	//adjacentMesh->drawLinesSequenceGraph(time,adjacentMesh->getNumIndices());
+	adjacentMesh->drawLines(0, 0, 0);
 
 	//---------------Link Matrices to Point Shader--------------------------------
 	pointShaderProgram->Use();
@@ -716,6 +803,11 @@ int main()
 	std::cout << "summed:" << summed << std::endl;
 	std::cout << "dot product:" << dotproduct << std::endl;*/
 
+	globals::radius = 5.f;
+	globals::cubeEdge = 2.f;
+	globals::filename = "sphere.obj";
+
+
 	bool result = do_magic(data); // here is where the magic happens!
 
 	if (!result)
@@ -829,9 +921,9 @@ int main()
 					manBool = !manBool; 
 				ImGui::Text("Slider for speed of manual nearest neighbors progression");
 				ImGui::SliderFloat("2", &sliderF, 0.0f, 4.0f);
-				//ImGui::Text("Slider for speed of automatic nearest neighbors progression");
-				//ImGui::SliderFloat("3", &sliderS, 0.1f, 10.0f);
-				//speed += sliderS;
+				ImGui::Text("Slider for speed of automatic nearest neighbors progression");
+				ImGui::SliderFloat("3", &sliderS, 0.1f, 10.0f);
+				lengthNormals += sliderS;
 				if (ImGui::Button("auto speed (+)")) {
 					speed += 1;
 				} ImGui::SameLine();
@@ -851,12 +943,20 @@ int main()
 				//ImGui::Text("counter = %d", counter);
 				 
 				//ImGui::Checkbox("Normals", &normBool);
-				if (ImGui::Button("Oriented normals on/off"))
+				if (ImGui::Button("Un-oriented normals on/off"))
 					normBool = true;
 				// gotta reset the bool right after the norm is set or else it will spaz out 
 				if (normBool) {
 					norm = !norm;
 					normBool = !normBool;
+				}
+
+				if (ImGui::Button("Oriented normals on/off"))
+					normBool1 = true;
+				// gotta reset the bool right after the norm is set or else it will spaz out 
+				if (normBool1) {
+					orientNorm = !orientNorm;
+					normBool1 = !normBool1;
 				}
 
 				// zooming in/out 
