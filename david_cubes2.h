@@ -201,12 +201,24 @@ void runMarchingCubes()
 		return pos.Norm() - Radius;
 	};*/
 
-	MeshReconstruction::Rect3 domain;
-	domain.min = { -2.1, -2.1, -2.1 };
-	domain.size = { 5.5, 5.5, 5.5 };
+	mcData& d = *globals::cubesData;
 
-	MeshReconstruction::Vec3 cubeSize{ 0.05, 0.05, 0.05 };
+	MeshReconstruction::Rect3 domain;
+
+	domain.min = { 
+		d.mcMinX,
+		d.mcMinY,
+		d.mcMinZ
+	};
+
+	domain.size = { 
+		d.mcMaxX - d.mcMinX,
+		d.mcMaxY - d.mcMinY,
+		d.mcMaxZ - d.mcMinZ
+	};
+
+	MeshReconstruction::Vec3 cubeSize{ 0.1, 0.1, 0.1 };
 
 	auto mesh = MeshReconstruction::MarchCube(formula, domain, cubeSize);
-	WriteObjFile(mesh, "test.obj");
+	WriteObjFile(mesh, "test1.obj");
 }
