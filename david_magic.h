@@ -56,7 +56,6 @@ bool do_magic(OutData& outData)
 	*/
 
 	//std::string filename = cloudfile::getCloudPointFilename();
-
 	std::string filename = constants::cloudPointsBasePath + "CatPoints.obj";
 	std::cout << "Loading " << filename << " wavefront file..." << std::endl;
 
@@ -99,7 +98,7 @@ bool do_magic(OutData& outData)
 	*
 	*/
 
-	double kRadius = .45f;	// this should be a function of 
+	double kRadius = 0.5f;	// this should be a function of 
 							// the density and noise of the point cloud
 	globals::radius = &kRadius;
 	outData.kRadius = kRadius;
@@ -259,7 +258,7 @@ bool do_magic(OutData& outData)
 
 	// create the graph mst successor array
 	size_t *graphMst = new size_t[nPoints];
-	graph::primMst(graph, nPoints, graphMst);
+	graph::primMst(graph, nPoints, graphMst, mstRootIdx);
 
 #ifdef PRINT_MST
 	std::cout << "\nMinimun spanning tree centroids with w(u,v) = 1-|n_u . n_v| :" << std::endl;
@@ -274,16 +273,17 @@ bool do_magic(OutData& outData)
 	// then propagate
 	std::cout << "Propagating normal orientations rooted at " << mstRootIdx << "..." << std::endl;
 
+
+	/*for (size_t i = 0; i < nPoints; i++)
+	{
+		if (graphMst[i] == -1)
+			mstRootIdx = i;
+	}*/
+
 	// align with z+
 	normals[mstRootIdx][0] = 0.0;
 	normals[mstRootIdx][1] = 0.0;
 	normals[mstRootIdx][2] = 1.0;
-
-	for (size_t i = 0; i < nPoints; i++)
-	{
-		if (graphMst[i] == -1)
-			mstRootIdx = i;
-	}
 
 	graph::propagateNormals(graphMst, nPoints, normals, mstRootIdx);    
 

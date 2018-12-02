@@ -31,6 +31,7 @@
 #include <limits>
 #include <iostream>
 
+#define BIG_FLOAT 10000000.f
 
 struct mcData {
 	float mcMinX;
@@ -115,6 +116,29 @@ bool getClosest(size_t& idx, alglib::real_1d_array& qP)
 	return false;
 }
 
+/*float signedDistance(double* _n, double* _o, const double* _p)
+{
+	alglib::real_1d_array n = ops::makeArr(_n, 3);
+	alglib::real_1d_array o = ops::makeArr(_o, 3);
+	alglib::real_1d_array p = ops::makeArr(_p, 3);
+
+	alglib::real_1d_array diff = p - o;
+	double dist = ops::dot(diff, n);
+
+	n[0] = n[0] * dist;
+	n[1] = n[1] * dist;
+	n[2] = n[2] * dist;
+
+	alglib::real_1d_array z = o - n;
+
+	size_t planeIdx;
+	if (getClosest(planeIdx, z))
+		return dist;
+
+	return BIG_FLOAT;
+}*/
+
+
 float signedDistance(double* n, double* o, const double* p)
 {
 	double diff[3] = {
@@ -123,10 +147,12 @@ float signedDistance(double* n, double* o, const double* p)
 		p[2] - o[2]
 	};
 
-	double d = ops::dot(diff, n, 3);
+	double dist = ops::dot(diff, n, 3);
 
-	return d;
+	return dist;
 }
+
+
 
 float formula(MeshReconstruction::Vec3 const& p)
 {
@@ -137,13 +163,13 @@ float formula(MeshReconstruction::Vec3 const& p)
 	double& r = *globals::radius;
 	alglib::real_2d_array& o = *globals::centroids;
 	alglib::real_2d_array& n = *globals::normals;
+	
+	
 
 	if (getClosest(planeIdx, qP))
 	{
 		d = signedDistance(n[planeIdx], o[planeIdx], qP.getcontent());
-		if (d >= 0.f && d < 0.0005) d += 0.0005;
-		if (d < 0.f && d > -0.0005) d -= 0.0005;
-
+		
 		/*std::cout << "distance_a: " << d << " , plane: " << planeIdx << " at: [";
 		std::cout << o[planeIdx][0] << ", ";
 		std::cout << o[planeIdx][1] << ", ";
@@ -156,7 +182,7 @@ float formula(MeshReconstruction::Vec3 const& p)
 	}
 	else
 	{
-		d = r + 1.f;
+		d = BIG_FLOAT;
 		/*std::cout << "distance_b: " << d << std::endl;*/
 	}
 
@@ -195,30 +221,25 @@ mcData* generateMcData(alglib::real_2d_array& points, size_t n, float minVal)
 
 void runMarchingCubes()
 {
-	/*auto sphereSdf = [](MeshReconstruction::Vec3 const& pos)
-	{
-		auto const Radius = 1.0;
-		return pos.Norm() - Radius;
-	};*/
-
 	mcData& d = *globals::cubesData;
 
 	MeshReconstruction::Rect3 domain;
 
 	domain.min = { 
-		d.mcMinX,
-		d.mcMinY,
-		d.mcMinZ
+		d.mcMinX - .25,
+		d.mcMinY - .25,
+		d.mcMinZ - .25
 	};
 
 	domain.size = { 
-		d.mcMaxX - d.mcMinX,
-		d.mcMaxY - d.mcMinY,
-		d.mcMaxZ - d.mcMinZ
+		d.mcMaxX - d.mcMinX + .5,
+		d.mcMaxY - d.mcMinY + .5,
+		d.mcMaxZ - d.mcMinZ + .5
 	};
 
-	MeshReconstruction::Vec3 cubeSize{ 0.1, 0.1, 0.1 };
+	double cube_edge = 0.05;
+	MeshReconstruction::Vec3 cubeSize{ cube_edge,cube_edge,cube_edge };
 
 	auto mesh = MeshReconstruction::MarchCube(formula, domain, cubeSize);
-	WriteObjFile(mesh, "test1.obj");
+	WriteObjFile(mesh, "test2.obj");
 }
