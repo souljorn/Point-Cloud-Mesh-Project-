@@ -73,6 +73,7 @@ namespace globals
 	double cubeEdge = 0.0;
 	std::string filename;
 	std::string outputFilename;
+	double cubeDiag = 0;
 };
 
 
@@ -99,12 +100,11 @@ MeshReconstruction::Vec3 alglib_Vec3(const alglib::real_1d_array& arr)
 
 bool getClosest(size_t& idx, alglib::real_1d_array& qP)
 {
-	double& r = globals::radius;
 	alglib::kdtree& kdt = *globals::kdtCentroids;
 	alglib::real_2d_array& normals = *globals::normals;
 
 	// query the kdtree for the neighbors
-	alglib::ae_int_t k = alglib::kdtreequeryrnn(kdt, qP, r);
+	alglib::ae_int_t k = alglib::kdtreequeryrnn(kdt, qP, globals::cubeDiag);
 
 	// store the tags that contain the point indices
 	alglib::integer_1d_array uNeighTags;
@@ -173,7 +173,7 @@ float formula(MeshReconstruction::Vec3 const& p)
 	if (getClosest(planeIdx, qP))
 	{
 		d = signedDistance(n[planeIdx], o[planeIdx], qP.getcontent());
-		
+		if (d == 0) d += 0.004f;
 		/*std::cout << "distance_a: " << d << " , plane: " << planeIdx << " at: [";
 		std::cout << o[planeIdx][0] << ", ";
 		std::cout << o[planeIdx][1] << ", ";
@@ -223,6 +223,18 @@ mcData* generateMcData(alglib::real_2d_array& points, size_t n, float minVal)
 }
 
 
+double norm2(double x0, double y0, double z0,  
+			 double x1, double y1, double z1)
+{
+	double dx = x0 - x1;
+	double dy = y0 - y1;
+	double dz = z0 - z1;
+
+
+	return abs(sqrt(dx * dx + dy * dy + dz * dz));
+}
+
+
 void runMarchingCubes()
 {
 	mcData& d = *globals::cubesData;
@@ -242,6 +254,13 @@ void runMarchingCubes()
 	};
 
 	double cube_edge = globals::cubeEdge;
+	globals::cubeDiag = norm2(
+		cube_edge, cube_edge, cube_edge,
+		-cube_edge, -cube_edge, -cube_edge
+	);
+
+	std::cout << "Cube diagonal:" << globals::cubeDiag << std::endl;
+
 	MeshReconstruction::Vec3 cubeSize{ cube_edge,cube_edge,cube_edge };
 
 	auto mesh = MeshReconstruction::MarchCube(formula, domain, cubeSize);

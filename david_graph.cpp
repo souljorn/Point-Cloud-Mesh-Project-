@@ -71,8 +71,9 @@ void graph::propagateNormals(size_t *graphMst, size_t nPoints, alglib::real_2d_a
 		if (graphMst[u] == root) // if u vertex is a child of root
 		{
 			// dot product of normals parent * child < 0, flip normal
-			if (ops::dot(normals[root], normals[u], dims) < 0)
+			if (ops::dot(normals[root], normals[u], dims) <= 0) {
 				ops::flip(normals[u], dims);
+			}
 
 			// then propagate along u
 			propagateNormals(graphMst, nPoints, normals, u);

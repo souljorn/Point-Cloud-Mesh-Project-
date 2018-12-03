@@ -182,6 +182,9 @@
     <None Include="PointClouds\sphere.obj">
       <Filter>PointClouds</Filter>
     </None>
+    <None Include="PointClouds\head_reduced9k.obj">
+      <Filter>PointClouds</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Shaders">

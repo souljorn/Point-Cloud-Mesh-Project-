@@ -803,9 +803,20 @@ int main()
 	std::cout << "summed:" << summed << std::endl;
 	std::cout << "dot product:" << dotproduct << std::endl;*/
 
-	globals::radius = 5.f;
-	globals::cubeEdge = 2.f;
-	globals::filename = "sphere.obj";
+	globals::radius = 0.4f;
+	globals::cubeEdge = .1f;
+	std::string file = "CatPoints";
+	globals::filename = file + ".obj";
+	globals::outputFilename = "test_" + file 
+		+ "_" + std::to_string(globals::radius)
+		+ "_" + std::to_string(globals::cubeEdge) + ".obj";
+
+
+	std::cout << "cloud input: " << globals::filename << std::endl;
+	std::cout << "mesh output: " << globals::outputFilename << std::endl;
+	std::cout << "radius: " << globals::radius << std::endl;
+	std::cout << "cubeEdge: " << globals::cubeEdge << std::endl;
+
 
 
 	bool result = do_magic(data); // here is where the magic happens!

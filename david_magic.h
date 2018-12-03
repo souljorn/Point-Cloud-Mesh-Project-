@@ -201,7 +201,7 @@ bool do_magic(OutData& outData)
 
 	// keep tab of max normal z component
 	alglib::ae_int_t mstRootIdx = 0;
-	double mstRootZVal = abs(normals[0][2]);
+	double mstRootZVal = normals[0][2];
 
 	// build a graph where all neighboring centroids are connected
 	double** graph = new double*[nPoints];
@@ -211,9 +211,9 @@ bool do_magic(OutData& outData)
 		graph[u] = new double[nPoints];
 
 		// update max z componentto to root mst
-		if (mstRootZVal < abs(normals[u][2]))
+		if (mstRootZVal < normals[u][2])
 		{
-			mstRootZVal = abs(normals[u][2]);
+			mstRootZVal = normals[u][2];
 			mstRootIdx = u;
 		}
 
@@ -306,6 +306,7 @@ bool do_magic(OutData& outData)
 #endif
 	
 	outData.rGraph = graph;
+
 
 
 
