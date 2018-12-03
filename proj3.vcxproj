@@ -42,6 +42,7 @@
     <ClInclude Include="Camera.h" />
     <ClInclude Include="colors.h" />
     <ClInclude Include="david_cubes.h" />
+    <ClInclude Include="david_cubes2.h" />
     <ClInclude Include="david_magic.h" />
     <ClInclude Include="david_constants.h" />
     <ClInclude Include="david_graph.h" />
@@ -57,6 +58,11 @@
     <ClInclude Include="Libraries\imgui\imstb_rectpack.h" />
     <ClInclude Include="Libraries\imgui\imstb_textedit.h" />
     <ClInclude Include="Libraries\imgui\imstb_truetype.h" />
+    <ClInclude Include="libraries\meshgen\Cube.h" />
+    <ClInclude Include="libraries\meshgen\DataStructs.h" />
+    <ClInclude Include="libraries\meshgen\IO.h" />
+    <ClInclude Include="libraries\meshgen\MeshReconstruction.h" />
+    <ClInclude Include="libraries\meshgen\Triangulation.h" />
     <ClInclude Include="libraries\tiny_obj_loader.h" />
     <ClInclude Include="MarchingCubesCross.h" />
     <ClInclude Include="MCTable.h" />
@@ -105,6 +111,10 @@
     <ClCompile Include="libraries\imgui\imgui_impl_glfw.cpp" />
     <ClCompile Include="libraries\imgui\imgui_impl_opengl3.cpp" />
     <ClCompile Include="Libraries\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="libraries\meshgen\Cube.cpp" />
+    <ClCompile Include="libraries\meshgen\IO.cpp" />
+    <ClCompile Include="libraries\meshgen\MeshReconstruction.cpp" />
+    <ClCompile Include="libraries\meshgen\Triangulation.cpp" />
     <ClCompile Include="libraries\tiny_obj_loader.cc" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="david_operations.cpp" />
@@ -141,7 +151,7 @@
       <FileType>Document</FileType>
     </None>
     <None Include="PointClouds\xy.obj">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <FileType>Document</FileType>
     </None>
     <None Include="PointClouds\xy_nearly.obj">
@@ -169,6 +179,13 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </Object>
     <Object Include="PointClouds\red_pepper_down.obj">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </Object>
+    <None Include="PointClouds\sphere.obj">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <FileType>Document</FileType>
+    </None>
+    <Object Include="PointClouds\sphereDense.obj">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </Object>
   </ItemGroup>

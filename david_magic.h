@@ -26,7 +26,10 @@
 #include "david_constants.h"
 #include "david_kdtmanip.h"
 #include "david_graph.h"
-#include "david_cubes.h"
+#include "david_cubes2.h"
+
+#include "libraries/meshgen/MeshReconstruction.h"
+#include "libraries/meshgen/IO.h"
 
 // Tim's data collection structure
 #include "tim_outdata.h"
@@ -34,6 +37,8 @@
 // tiny object loader
 #define TINYOBJLOADER_IMPLEMENTATIO
 #include "../tinyobj/tiny_obj_loader.h";
+
+
 
 
 
@@ -51,7 +56,7 @@ bool do_magic(OutData& outData)
 	*/
 
 	//std::string filename = cloudfile::getCloudPointFilename();
-	std::string filename = constants::cloudPointsBasePath + "CatPoints.obj";
+	std::string filename = constants::cloudPointsBasePath + globals::filename;
 	std::cout << "Loading " << filename << " wavefront file..." << std::endl;
 
 	tinyobj::attrib_t pcloud;
@@ -93,9 +98,9 @@ bool do_magic(OutData& outData)
 	*
 	*/
 
-	double kRadius = .45f;	// this should be a function of 
-							// the density and noise of the point cloud
-	globals::radius = &kRadius;
+
+	double kRadius = globals::radius;	// this should be a function of 
+										// the density and noise of the point cloud
 	outData.kRadius = kRadius;
 
 	std::cout << "Building an " << nPoints << " points kdtree using norm2 (euclidean)..." << std::endl;
@@ -253,7 +258,7 @@ bool do_magic(OutData& outData)
 
 	// create the graph mst successor array
 	size_t *graphMst = new size_t[nPoints];
-	graph::primMst(graph, nPoints, graphMst);
+	graph::primMst(graph, nPoints, graphMst, mstRootIdx);
 
 #ifdef PRINT_MST
 	std::cout << "\nMinimun spanning tree centroids with w(u,v) = 1-|n_u . n_v| :" << std::endl;
@@ -268,16 +273,17 @@ bool do_magic(OutData& outData)
 	// then propagate
 	std::cout << "Propagating normal orientations rooted at " << mstRootIdx << "..." << std::endl;
 
+
+	/*for (size_t i = 0; i < nPoints; i++)
+	{
+		if (graphMst[i] == -1)
+			mstRootIdx = i;
+	}*/
+
 	// align with z+
 	normals[mstRootIdx][0] = 0.0;
 	normals[mstRootIdx][1] = 0.0;
 	normals[mstRootIdx][2] = 1.0;
-
-	for (size_t i = 0; i < nPoints; i++)
-	{
-		if (graphMst[i] == -1)
-			mstRootIdx = i;
-	}
 
 	graph::propagateNormals(graphMst, nPoints, normals, mstRootIdx);    
 
@@ -310,6 +316,9 @@ bool do_magic(OutData& outData)
 
 
 	globals::cubesData = generateMcData(points, nPoints, kRadius);
+
+	std::cout << globals::cubesData->tostr() << std::endl;
+
 	// maxes and mines for timmy to scale the thing
 	outData.minX = globals::cubesData->mcMinX;
 	outData.maxX = globals::cubesData->mcMaxX;
@@ -318,6 +327,7 @@ bool do_magic(OutData& outData)
 	outData.minZ = globals::cubesData->mcMinZ;
 	outData.maxZ = globals::cubesData->mcMaxZ;
 
+	runMarchingCubes();
 
 
 
@@ -352,6 +362,11 @@ bool do_magic(OutData& outData)
 	// clean up memory
 	// delete[] graphMst;
 	// graph::deleteAdjMatrix(graph, nPoints);
+
+
+	
+
+
 
 	return true;
 }
