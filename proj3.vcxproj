@@ -151,7 +151,7 @@
       <FileType>Document</FileType>
     </None>
     <None Include="PointClouds\xy.obj">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <FileType>Document</FileType>
     </None>
     <None Include="PointClouds\xy_nearly.obj">
@@ -185,6 +185,9 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <FileType>Document</FileType>
     </None>
+    <Object Include="PointClouds\sphereDense.obj">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </Object>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{AA6666AA-E09F-4135-9C0C-4FE50C3C654B}</ProjectGuid>

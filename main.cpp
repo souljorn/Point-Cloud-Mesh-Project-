@@ -83,6 +83,14 @@ bool autoBool = false;
 bool manBool = false;
 bool orientNorm = false;
 bool normBool1 = false;
+bool reset = false;
+bool graphStatic = false;
+bool graphAnimated = false;
+bool nearestNeighborAnimate = false;
+
+double scaleNormal;
+double scaleConst;
+
 
 //Variable to set point size through out the project
 float PointSize = 3.0;
@@ -311,7 +319,7 @@ void init()
 	glPointSize(PointSize);
 
 	//Create a scale factor that takes into consideration the size of the model
-	scaleFactor = 12 / sqrt(pow((data.minX - data.maxX), 2) + pow((data.minY - data.maxY), 2) + pow((data.minZ - data.maxZ), 2));
+	scaleFactor = scaleConst / sqrt(pow((data.minX - data.maxX), 2) + pow((data.minY - data.maxY), 2) + pow((data.minZ - data.maxZ), 2));
 
 
 	//--------Load Shader-----------
@@ -384,9 +392,9 @@ void init()
 		std::cout << "," << vert.z;
 		std::cout << "," << std::endl;*/
 		
-		 normalsUnordered.at(i).x = 2 * normalsUnordered.at(i).x + centroidPoints.at(i).x;
-		 normalsUnordered.at(i).y = 2 * normalsUnordered.at(i).y + centroidPoints.at(i).y;
-		 normalsUnordered.at(i).z = 2 * normalsUnordered.at(i).z + centroidPoints.at(i).z;
+		 normalsUnordered.at(i).x = scaleNormal * normalsUnordered.at(i).x + centroidPoints.at(i).x;
+		 normalsUnordered.at(i).y = scaleNormal * normalsUnordered.at(i).y + centroidPoints.at(i).y;
+		 normalsUnordered.at(i).z = scaleNormal * normalsUnordered.at(i).z + centroidPoints.at(i).z;
 		
 		
 	/*	std::cout << "After:";
@@ -408,9 +416,9 @@ void init()
 	//Shift the normals to the centroids
 	for (int i = 0; i < normalOriented.size(); i++) {
 
-		normalOriented.at(i).x = 2 * normalOriented.at(i).x + centroidPoints.at(i).x;
-		normalOriented.at(i).y = 2 * normalOriented.at(i).y + centroidPoints.at(i).y;
-		normalOriented.at(i).z = 2 * normalOriented.at(i).z + centroidPoints.at(i).z;
+		normalOriented.at(i).x = scaleNormal * normalOriented.at(i).x + centroidPoints.at(i).x;
+		normalOriented.at(i).y = scaleNormal * normalOriented.at(i).y + centroidPoints.at(i).y;
+		normalOriented.at(i).z = scaleNormal * normalOriented.at(i).z + centroidPoints.at(i).z;
 	}
 
 	normalsOriented->createLines(centroidPoints, normalOriented);
@@ -514,7 +522,7 @@ void display(int windowWidth, int windowHeight,float rotateF,float sliderF,float
 
 	// Model matrix : an identity matrix (model will be at the origin)
 	glm::mat4 modelPoint = glm::mat4(1.0f);
-	modelPoint = glm::scale(modelPoint, glm::vec3(.002, .002, .002));
+	modelPoint = glm::scale(modelPoint, glm::vec3(scaleFactor  *  .02, scaleFactor * .02, scaleFactor * .02));
 	modelPoint = glm::translate(modelPoint, glm::vec3(0, 0, 0));
 	modelPoint = glm::rotate(modelPoint, rotateF *5 , glm::vec3(0, 1.0f, 0.1f));
 
@@ -534,12 +542,6 @@ void display(int windowWidth, int windowHeight,float rotateF,float sliderF,float
 	//grid->drawPoints();
 	xzPlane->drawLines(0, 0, 0);
 	//Turn Normals on/off with N key
-	if (norm) {
-		normalsUO->drawLines(0, 0, 0);
-	}
-	if (orientNorm) {
-		normalsOriented->drawLines(0, 0, 0);
-	}
 	
 	/*
 	if(progressBool){
@@ -550,7 +552,7 @@ void display(int windowWidth, int windowHeight,float rotateF,float sliderF,float
 	*/
 
 	centroidMesh->drawPoints();
-	
+	if(nearestNeighborAnimate)
 	nearestNeighborMesh->drawPointGroups(time, nearestNeighborMesh->indices.size(), nearestNeighborCount, NNGroupStartIndex, speed);
 	//pointCloud->drawPoints();
 	queryPointMesh->drawPoints();
@@ -558,8 +560,12 @@ void display(int windowWidth, int windowHeight,float rotateF,float sliderF,float
 
 	//Transparent Objects must be drawn last
 	//triangleTest->drawTriangle();
-	//adjacentMesh->drawLinesSequenceGraph(time,adjacentMesh->getNumIndices());
-	adjacentMesh->drawLines(0, 0, 0);
+	if (graphAnimated) {
+		adjacentMesh->drawLinesSequenceGraph(time, adjacentMesh->getNumIndices());
+	}
+	if (graphStatic) {
+		adjacentMesh->drawLines(0, 0, 0);
+	}
 
 	//---------------Link Matrices to Point Shader--------------------------------
 	pointShaderProgram->Use();
@@ -574,7 +580,13 @@ void display(int windowWidth, int windowHeight,float rotateF,float sliderF,float
 		GLCall(glUniform1f(alphaBasic, ((sin(manNN * 150.0f) + 1) * .0005) + .995f));
 	}
 	//----------Mesh Draw Calls for The Points------------------------------------
-	
+	if (norm) {
+		normalsUO->drawLines(0, 0, 0);
+	}
+	if (orientNorm) {
+		normalsOriented->drawLines(0, 0, 0);
+	}
+
 	
 	//Unbind the VAO
 	GLCall(glBindVertexArray(0));
@@ -701,6 +713,15 @@ void KeyCallback(GLFWwindow *window, int key, int scan, int act, int mode)
 		farPlane += 5.0f;
 		std::cout << "FarPlane:" << farPlane << std::endl;
 	}
+	if (key == GLFW_KEY_G && act == GLFW_PRESS)
+	{
+		graphStatic = !graphStatic;
+	}
+	if (key == GLFW_KEY_H && act == GLFW_PRESS)
+	{
+		graphAnimated = !graphAnimated;
+	}
+	
 
     //updating keys table 
     if (act == GLFW_PRESS)
@@ -803,10 +824,13 @@ int main()
 	std::cout << "summed:" << summed << std::endl;
 	std::cout << "dot product:" << dotproduct << std::endl;*/
 
-	globals::radius = 5.f;
-	globals::cubeEdge = 2.f;
-	globals::filename = "sphere.obj";
-
+	globals::radius = .1f;
+	globals::cubeEdge = .1f;
+	globals::filename = "sphereDense.obj";
+	globals::outputFilename = "outputMesh.obj";
+	scaleNormal = .50f;
+	scaleConst = 20.0f;
+	
 
 	bool result = do_magic(data); // here is where the magic happens!
 
@@ -958,7 +982,12 @@ int main()
 					orientNorm = !orientNorm;
 					normBool1 = !normBool1;
 				}
-
+				if (ImGui::Button("Toggle Static Graph"))
+					graphStatic = !graphStatic;
+				if (ImGui::Button("Toggle Animated Graph"))
+					graphAnimated = !graphAnimated;
+				if (ImGui::Button("Nearest Neighbor Animation"))
+					nearestNeighborAnimate = !nearestNeighborAnimate;
 				// zooming in/out 
 				if (ImGui::Button("Zoom In"))
 					camZ -= 1.1; 

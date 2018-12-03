@@ -209,5 +209,8 @@
     <Object Include="PointClouds\CatPoints.obj">
       <Filter>PointClouds</Filter>
     </Object>
+    <Object Include="PointClouds\sphereDense.obj">
+      <Filter>PointClouds</Filter>
+    </Object>
   </ItemGroup>
 </Project>
