@@ -83,6 +83,7 @@ bool autoBool = false;
 bool manBool = false;
 bool orientNorm = false;
 bool normBool1 = false;
+//float time = 0.0f;
 
 //Variable to set point size through out the project
 float PointSize = 3.0;
@@ -484,7 +485,14 @@ void display(int windowWidth, int windowHeight,float rotateF,float sliderF,float
 
 	//Time for dynamic rendering/animation
 	static float time;
-	time = glfwGetTime();
+
+	if (!manBool) {
+		time = glfwGetTime();
+	}
+	else {
+		time = manNN;
+	}
+	
 	 
 	//Clear the buffer
 	GLCall(glClearColor(SlateGray.x, SlateGray.y, SlateGray.z, 1.0f));
@@ -567,12 +575,12 @@ void display(int windowWidth, int windowHeight,float rotateF,float sliderF,float
 	GLCall(glUniformMatrix4fv(viewIDPoint, 1, GL_FALSE, glm::value_ptr(view)));
 	GLCall(glUniformMatrix4fv(projectionIDPoint, 1, GL_FALSE, glm::value_ptr(projection)));
 	//Alpha is a float in the shader used to add jitter to the query points
-	if (!manBool) {
+	//if (!manBool) {
 		GLCall(glUniform1f(alphaBasic, ((sin(time * 150.0f) + 1) * .0005) + .995f));
-	}
-	else {
-		GLCall(glUniform1f(alphaBasic, ((sin(manNN * 150.0f) + 1) * .0005) + .995f));
-	}
+	//}
+	//else {
+		//GLCall(glUniform1f(alphaBasic, ((sin(manNN * 150.0f) + 1) * .0005) + .995f));
+	//}
 	//----------Mesh Draw Calls for The Points------------------------------------
 	
 	
@@ -914,10 +922,13 @@ int main()
 				ImGui::SliderFloat("1", &f, 0.0f, 64.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
 				if (ImGui::Button("Toggle auto/manual nearest neighbors"))
 					manBool = !manBool; 
-				ImGui::Text("Slider for speed of manual nearest neighbors progression");
-				ImGui::SliderFloat("2", &sliderF, 0.0f, 4.0f);
-				ImGui::Text("Slider for speed of automatic nearest neighbors progression");
-				ImGui::SliderFloat("3", &sliderS, 0.1f, 10.0f);
+				ImGui::Text("Slider for manual nearest neighbors progression");
+				ImGui::SliderFloat("4", &manNN,0.0f,100.0f);
+
+				//ImGui::Text("Slider for speed of manual nearest neighbors progression");
+				//ImGui::SliderFloat("2", &sliderF, 0.0f, 4.0f);
+				//ImGui::Text("Slider for speed of automatic nearest neighbors progression");
+				//ImGui::SliderFloat("3", &sliderS, 0.1f, 10.0f);
 				lengthNormals += sliderS;
 				if (ImGui::Button("auto speed (+)")) {
 					speed += 1;
@@ -926,8 +937,7 @@ int main()
 					speed -= 1;
 				}
 				if (speed < 0) speed =1;
-				ImGui::Text("Slider for manual nearest neighbors progression");
-				ImGui::SliderFloat("4", &manNN,0.0f,3.0f);
+				
 				//ImGui::SliderFloat("Slider", &sliderF, 0.0f, 1.0f);
 				
 				//ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
@@ -982,20 +992,28 @@ int main()
 					lookY = 0.049f;
 					lookZ = -0.065f;
 				}
-				if (ImGui::Button("Reset process")) {
-					delay = 0;
-				}
+				//if (ImGui::Button("Reset process")) {
+				//	time = 0.0f;
+				//}
 					
 				// program data 
 				ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-				ImGui::Text("Current time: %f" ,&time);
+				ImGui::Text("Current time: %d" ,glfwGetTime());
 				ImGui::Text("Amount of points currently being loaded: %d",data.nPoints);
 				ImGui::Text("Current neighborhood being operating on: %d", delay);
 				int NNcount = nearestNeighborCount.at(delay);
 				ImGui::Text("Amount of neighbors that the %d point has: %d",delay,NNcount);
-				//for (int i = delay; i < delay+NNcount; i++) {
-				//	ImGui::Text(" ",);
-				//}
+			    std::vector<Vertex> nnlist = nearestNeighbor.at(delay);
+
+				ImGui::Text("The nearest neighbors of the current point:");
+				for (int i = 0; i < nnlist.size(); i++) {
+					//ImGui::Text("The current point's current nearest neighbor is at:");
+					ImGui::Text("%d: ", i); ImGui::SameLine();
+					ImGui::Text("%d, %d, %d",nnlist.at(i).x, nnlist.at(i).y, nnlist.at(i).z);
+					//if (i%3!=0 && i>0)
+						//ImGui::SameLine();
+
+				}
 
 
 				//camera data 
@@ -1009,7 +1027,7 @@ int main()
 
 				// display 
 				display(widthBuff, heightBuff, f, sliderF,manNN);
-				//Gui render
+				//Gui render	
 				ImGui::Render();
 				ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 			
