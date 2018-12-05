@@ -37,7 +37,11 @@ struct custom_comparator {
 enum Axis { Xaxis, Yaxis, Zaxis };
 static int delay = 0;
 static int graphIndex = 0;
+static int graphIndexMan = 0;
 int oldDelay;
+static int nnIndex = 0;
+
+
 
 //----------------------------------------------
 //		Error Wrapper
@@ -166,6 +170,18 @@ struct Vertex {
 		return temp;
 	}
 };
+
+
+
+float distance3D(Vertex p1, Vertex p2)
+{
+	float a = p1.x - p2.x;
+	float b = p1.y - p2.y;
+	float c = p1.z - p2.z;
+
+	return abs(sqrt(a * a + b * b + c * c));
+}
+
 
 //----------------------------------------------
 // Custom Face Class
@@ -310,12 +326,23 @@ public:
 	}
 
 	//Draw all lines in the mesh
-	void drawLines(GLint position, GLint colorIndex, unsigned int startingIndex)
+	void drawLines()
 	{
 
 		GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_vbo_indices));
 		GLCall(glBindVertexArray(m_VAO));
-		GLCall(glDrawElements(GL_LINES, indices.size() * 2, GL_UNSIGNED_INT, (void*)0));
+		GLCall(glDrawElements(GL_LINES, indices.size(), GL_UNSIGNED_INT, (void*)0));
+		GLCall(glBindVertexArray(0));
+	}
+
+
+	//Draw all lines in the mesh
+	void drawLinesIndexed()
+	{
+
+		GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_vbo_indices));
+		GLCall(glBindVertexArray(m_VAO));
+		GLCall(glDrawElements(GL_LINES, 2, GL_UNSIGNED_INT, (void*)((2 * nnIndex) * sizeof(GLuint))));
 		GLCall(glBindVertexArray(0));
 	}
 
@@ -338,15 +365,16 @@ public:
 	}
 
 	//Draw lines in sequence iterating through all lines in the mesh
-	void drawLinesSequenceGraph(float time, int modFactor)
+	void drawLinesSequenceGraph(float time, int modFactor, std::vector<std::pair<unsigned int, unsigned int>> pairs)
 	{
 		//Rendering sequenced
-		graphIndex = static_cast<unsigned int>(find_Mod(time * 200, modFactor));
+		graphIndex = static_cast<unsigned int>(find_Mod(time * 20, modFactor));
+		//graphIndex = static_cast<unsigned int>(find_Mod(graphIndexMan, modFactor));
 		//std::cout << delay << std::endl;
 		//oldDelay != delay ? delay = delay + 1 : oldDelay = delay;
 		GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_vbo_indices));
 		GLCall(glBindVertexArray(m_VAO));
-		GLCall(glDrawElements(GL_LINES, graphIndex, GL_UNSIGNED_INT, (void*)0));
+		GLCall(glDrawElements(GL_LINES, pairs.at(graphIndex).second , GL_UNSIGNED_INT, (void*)(graphIndex * sizeof(GLuint))));
 		GLCall(glBindVertexArray(0));
 		
 	}
@@ -360,6 +388,14 @@ public:
 		GLCall(glBindVertexArray(0));
 	}
 
+	void drawIndexedPoint()
+	{
+		delay = nnIndex;
+		GLCall(glBindVertexArray(m_VAO));
+		GLCall(glDrawArrays(GL_POINTS, delay,1));
+		GLCall(glBindVertexArray(0));
+	}
+
 	//Draw Points in a mesh in in a sequence
 	//time is passed from display funciton
 	//modfactor is the size of all the indicies so overflow does not occur, rolls over to the beginning of indices
@@ -367,14 +403,28 @@ public:
 	//speed is how fast we animate contoled with the O/P key
 	void drawPointGroups(float time, int modFactor, std::vector<unsigned int> groupCount, std::vector<unsigned int> NNstartIndex, int speed)
 	{
-		delay = static_cast<unsigned int>(find_Mod(time * speed, groupCount.size() - 1));
-		
+		//delay = static_cast<unsigned int>(find_Mod(time * speed, groupCount.size() - 1));
+
+		//Prevent over flow
+		delay = nnIndex;
 		GLCall(glBindVertexArray(m_VAO));
 		GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_vbo_indices));
-		GLCall(glDrawElements(GL_POINTS, groupCount.at(delay), GL_UNSIGNED_INT, (void*)( NNstartIndex.at(delay) * sizeof(GLuint))));
-		//glDrawElementsBaseVertex(GL_POINTS, 20, GL_UNSIGNED_INT,0, 10);
+		GLCall(glDrawElements(GL_POINTS, groupCount.at(delay) - 1, GL_UNSIGNED_INT, (void*)( NNstartIndex.at(delay) * sizeof(GLuint))));
 		GLCall(glBindVertexArray(0));
 		
+	}
+
+	void drawPointGroupsSequenced(float time, int modFactor, std::vector<unsigned int> groupCount, std::vector<unsigned int> NNstartIndex, int speed)
+	{
+		delay = static_cast<unsigned int>(find_Mod(time * speed, groupCount.size()));
+
+		//Prevent over flow
+	
+		GLCall(glBindVertexArray(m_VAO));
+		GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_vbo_indices));
+		GLCall(glDrawElements(GL_POINTS, groupCount.at(delay), GL_UNSIGNED_INT, (void*)(NNstartIndex.at(delay) * sizeof(GLuint))));
+		GLCall(glBindVertexArray(0));
+
 	}
 
 	//Set indices of faces
@@ -442,14 +492,30 @@ public:
 	}
 
 	//Create Lines gives list of origin vertices and direction vector
-	void createLines(std::vector<Vertex> origin, std::vector<Vertex> direction)
+	void createLines(std::vector<Vertex> origin, std::vector<Vertex> direction, color color,float alpha)
 	{
 		//vertices.push_back(Vertex(0.0f, 0.0f, 0.0f, BlueViolet));
 		for (int i = 0; i < origin.size(); i++) {
-			vertices.push_back(origin.at(i));
-			vertices.push_back(direction.at(i));
+			vertices.push_back(Vertex(origin.at(i).x,origin.at(i).y,origin.at(i).z, color.x, color.y, color.z, alpha));
+			vertices.push_back(Vertex(direction.at(i).x, direction.at(i).y, direction.at(i).z, color.x, color.y, color.z, alpha));
 			setIndices(2*i,2*i+1);
 		}
+	}
+
+	//Create Lines gives list of origin vertices and direction vector
+	void createLines(std::vector<std::pair<unsigned int,unsigned int>> pointPair, std::vector<Vertex> queryPoints, color color)
+	{
+		//vertices.push_back(Vertex(0.0f, 0.0f, 0.0f, BlueViolet));
+		for (int i = 0; i < pointPair.size() ; i++) {
+			if(i == 255)
+				std::cout << "";
+			if (pointPair.at(i).first > 0 && pointPair.at(i).second > 0) {
+				vertices.push_back(Vertex(queryPoints.at(pointPair.at(i).first), color));
+				vertices.push_back(Vertex(queryPoints.at(pointPair.at(i).second), color));
+				setIndices(pointPair.at(i).first, pointPair.at(i).second);
+			}
+		}
+		std::cout << "";
 	}
 
 	//Create points with a vertex list and a color
@@ -566,6 +632,8 @@ public:
 	{
 		return sqrt(pow((x2 - x1), 2));
 	}
+
+	
 
 	//Create an X,Y, or Z aligned 2d grid with a certain amount of divisions, color
 	//Left, right and Top, Bottom determine position and size of grid
