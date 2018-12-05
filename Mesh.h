@@ -326,12 +326,12 @@ public:
 	}
 
 	//Draw all lines in the mesh
-	void drawLines(GLint position, GLint colorIndex, unsigned int startingIndex)
+	void drawLines()
 	{
 
 		GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_vbo_indices));
 		GLCall(glBindVertexArray(m_VAO));
-		GLCall(glDrawElements(GL_LINES, indices.size() * 2, GL_UNSIGNED_INT, (void*)0));
+		GLCall(glDrawElements(GL_LINES, indices.size(), GL_UNSIGNED_INT, (void*)0));
 		GLCall(glBindVertexArray(0));
 	}
 
@@ -388,6 +388,14 @@ public:
 		GLCall(glBindVertexArray(0));
 	}
 
+	void drawIndexedPoint()
+	{
+		delay = nnIndex;
+		GLCall(glBindVertexArray(m_VAO));
+		GLCall(glDrawArrays(GL_POINTS, delay,1));
+		GLCall(glBindVertexArray(0));
+	}
+
 	//Draw Points in a mesh in in a sequence
 	//time is passed from display funciton
 	//modfactor is the size of all the indicies so overflow does not occur, rolls over to the beginning of indices
@@ -402,7 +410,6 @@ public:
 		GLCall(glBindVertexArray(m_VAO));
 		GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_vbo_indices));
 		GLCall(glDrawElements(GL_POINTS, groupCount.at(delay), GL_UNSIGNED_INT, (void*)( NNstartIndex.at(delay) * sizeof(GLuint))));
-		//glDrawElementsBaseVertex(GL_POINTS, 20, GL_UNSIGNED_INT,0, 10);
 		GLCall(glBindVertexArray(0));
 		
 	}
@@ -472,12 +479,12 @@ public:
 	}
 
 	//Create Lines gives list of origin vertices and direction vector
-	void createLines(std::vector<Vertex> origin, std::vector<Vertex> direction)
+	void createLines(std::vector<Vertex> origin, std::vector<Vertex> direction, color color,float alpha)
 	{
 		//vertices.push_back(Vertex(0.0f, 0.0f, 0.0f, BlueViolet));
 		for (int i = 0; i < origin.size(); i++) {
-			vertices.push_back(origin.at(i));
-			vertices.push_back(direction.at(i));
+			vertices.push_back(Vertex(origin.at(i).x,origin.at(i).y,origin.at(i).z, color.x, color.y, color.z, alpha));
+			vertices.push_back(Vertex(direction.at(i).x, direction.at(i).y, direction.at(i).z, color.x, color.y, color.z, alpha));
 			setIndices(2*i,2*i+1);
 		}
 	}

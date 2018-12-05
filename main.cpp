@@ -45,7 +45,7 @@ double find_Mod(double a, double b);
 enum VAO_IDs { PointCloud, Lines, Grid, GridLines,
 	XYPlane, NormalsUO, QueryVao, NearestNeighborVAO, CentroidVAO,
 	NormalsOriented, TriangleTest, BoundingBoxVAO, AdjacentVAO,
-	MSTVao, NumVAOs };
+	MSTVao,CentroidIndexed, NumVAOs };
 
 GLuint  VAOs[NumVAOs];
 
@@ -71,7 +71,8 @@ Mesh * normalsOriented;
 Mesh * triangleTest;
 Mesh * adjacentMesh;
 Mesh * boundingBoxMesh;
-Mesh * MST;
+Mesh * mstMesh;
+Mesh * indexedCentroidPoint;
 
 
 //----------------------------------------------
@@ -90,6 +91,10 @@ bool reset = false;
 bool graphStatic = false;
 bool graphAnimated = false;
 bool nearestNeighborAnimate = false;
+bool centroids = true;
+bool query = true;
+bool nearestNeighborStatic = false;
+
 
 double scaleNormal;
 double scaleConst;
@@ -111,7 +116,7 @@ std::vector<std::vector<Vertex>> nearestNeighbor;
 std::vector<Vertex> centroidPoints;
 std::vector<int> tagData;
 std::vector<unsigned int> nearestNeighborCount;
-std::vector<unsigned int> NNGroupStartIndex;
+std::vector<unsigned int> nearestNeighborGroupStartIndex;
 std::set<std::pair<int, int>, custom_comparator> setAdjacent;
 std::vector<std::pair<int, int>> mstGraph;
 
@@ -136,6 +141,7 @@ GLuint alphaBasic;
 //----------------------------------------------
 int windowHeight = 2000;
 int windowLength = 1400;
+void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 
 //----------------------------------------------
 // Perspective settings
@@ -197,8 +203,13 @@ void cleanUp()
 	delete normalsUO;
 	delete queryPointMesh;
 	delete nearestNeighborMesh;
-	//delete nearestNeighborMesh1;
 	delete centroidMesh;
+	delete normalsOriented;
+	delete triangleTest;
+	delete adjacentMesh;
+	delete boundingBoxMesh;
+	delete mstMesh;
+	delete indexedCentroidPoint;
 	
 }
 
@@ -226,7 +237,7 @@ void parseData()
 	int i= 0;
 	double * normOriented;
 	//Push the first index then push i-1 + row
-	NNGroupStartIndex.push_back(0);
+	
 	for (auto d : data.kdTreeData) {
 		
 	/*	std::cout << "For query point " << d.queryPoint.tostring(constants::psd) << " with kRadius " << data.kRadius << std::endl;
@@ -250,6 +261,8 @@ void parseData()
 			}
 		}  
 	}
+
+	
 	for (int i = 0; i < data.nPoints; i++) {
 
 		//Nearest Neighbor
@@ -263,18 +276,20 @@ void parseData()
 		//Nerest neighbor points and group size
 		nearestNeighbor.push_back(temp);
 		nearestNeighborCount.push_back(rows);
-		NNGroupStartIndex.push_back(rows + NNGroupStartIndex.at(i));
-		//std::cout << "Start Numbers::" << NNGroupStartIndex.back() << std::endl;
 
-		//Get norms
+		if (i == 0) {
+			nearestNeighborGroupStartIndex.push_back(0);
+		}
+		else {
+			nearestNeighborGroupStartIndex.push_back(nearestNeighborCount.at(i-1) + nearestNeighborGroupStartIndex.at(i - 1));
+		}
+
+		//Get normals
 		norm = data.kdTreeData.at(i).normal.getcontent();
 		normOriented = data.kdTreeData.at(i).normalOriented.getcontent();
 
-
-		normalsUnordered.push_back(Vertex((float)norm[0], (float)norm[1], (float)norm[2], Violet));
-		normalOriented.push_back(Vertex((float)normOriented[0], (float)normOriented[1], (float)normOriented[2], Green));
-
-
+		normalsUnordered.push_back(Vertex((float)norm[0], (float)norm[1], (float)norm[2], Red));
+		normalOriented.push_back(Vertex((float)normOriented[0], (float)normOriented[1], (float)normOriented[2], Blue));
 
 		//Centroid
 		centroid = data.kdTreeData.at(i).centroid.getcontent();
@@ -284,7 +299,7 @@ void parseData()
 		tag = data.kdTreeData.at(i).tagsCentroids.getcontent();
 		tagData.push_back(tag[0]);
 	}
-	//Query Points
+
 	//Create MST Lines
 	int root = data.mstRootIdx;
 	for (int i = 0; i < data.nPoints; i++)
@@ -303,7 +318,7 @@ void parseData()
 				Vertex p2(centroidPoints.at(data.graphMst[i]));
 
 			
-				std::cout << "p1:";
+				/*std::cout << "p1:";
 				std::cout << "(" << p1.x;
 				std::cout << "," << p1.y;
 				std::cout << "," << p1.z;
@@ -312,7 +327,7 @@ void parseData()
 				std::cout << "," << p2.y;
 				std::cout << "," << p2.z;
 				std::cout << ")";
-				std::cout << " >> distance " << distance3D(p1, p2) << std::endl;
+				std::cout << " >> distance " << distance3D(p1, p2) << std::endl;*/
 					
 		}
 	}
@@ -320,44 +335,9 @@ void parseData()
 	std::cout << "graphMST" << mstGraph.size() << std::endl;
 	std::cout << "Adjacent Set" << setAdjacent.size() << std::endl;
 	
-
-	for (int i = 0; i < data.nPoints ; i++) {
-		
-		//Nearest Neighbor
-		rows = data.kdTreeData.at(i).neighbors.rows();
-		std::vector<Vertex> temp;
-		for(int j = 0; j < rows; j++)
-		{
-			temp.push_back(Vertex(data.kdTreeData.at(i).neighbors[j][0],
-				data.kdTreeData.at(i).neighbors[j][1], data.kdTreeData.at(i).neighbors[j][2], Red));			
-		}
-		//Nerest neighbor points and group size
-		nearestNeighbor.push_back(temp);
-		nearestNeighborCount.push_back(rows);
-		NNGroupStartIndex.push_back(rows + NNGroupStartIndex.at(i));
-		//std::cout << "Start Numbers::" << NNGroupStartIndex.back() << std::endl;
-		
-		//Get norms
-		norm = data.kdTreeData.at(i).normal.getcontent();
-		normOriented = data.kdTreeData.at(i).normalOriented.getcontent();
-		
 	
-		normalsUnordered.push_back(Vertex((float)norm[0] , (float)norm[1], (float)norm[2] , Violet));
-		normalOriented.push_back(Vertex((float)normOriented[0], (float)normOriented[1], (float)normOriented[2], Green));
-		
-		
-
-		//Centroid
-		centroid = data.kdTreeData.at(i).centroid.getcontent();
-		centroidPoints.push_back(Vertex(centroid[0], centroid[1], centroid[2], Orange));
-
-		//CentroidTag
-		tag = data.kdTreeData.at(i).tagsCentroids.getcontent();
-		tagData.push_back(tag[0]);
-	}
-	//Remove the end index
-	NNGroupStartIndex.pop_back();
-	std::cout << "Start Numbers Size::" << NNGroupStartIndex.size() << std::endl;
+	
+	std::cout << "Start Numbers Size::" << nearestNeighborGroupStartIndex.size() << std::endl;
 	std::cout << "Group Numbers Size::" << nearestNeighborCount.size() << std::endl;
 	std::cout << "Normals Unoriented Size::" << normalsUnordered.size() << std::endl;
 	std::cout << "Normals Oriented Size::" << normalOriented.size() << std::endl;
@@ -413,15 +393,17 @@ void init()
 	GLCall(projectionIDPoint= glGetUniformLocation(pointShaderProgram->Program, "projection"));
 	GLCall(cameraIDPoint = glGetUniformLocation(pointShaderProgram->Program, "camera"));
 	GLCall(alphaBasic = glGetUniformLocation(pointShaderProgram->Program, "alpha"));
-
-	// Setup up of vertices, indicies, and buffers for the mesh objects
-	// ------------------------------------------------------------------
-	//std::cout << "NN-Count:" << nearestNeighborCount[0] << std::endl;
-	//Create Point Cloud from file
+	
+	/*----------------------------------------------
+	 *
+	 *     Setup up of vertices, indicies, 
+	 *     and buffers for the mesh objects
+	 *
+	//----------------------------------------------*/
+	
 	pointCloud = new Mesh();
 	//pointCloud->createPointCloud("./PointClouds/xy.obj");
 	//pointCloud->createBufferPoints(VAOs[PointCloud]);
-	
 	
 	square = new Mesh();
 	//square->createPoints(normalsUnordered, Red);
@@ -431,7 +413,7 @@ void init()
 	//grid->createGrid(4, .0f, 0.5f, 0.0f, 0.5f, Zaxis, Orange);
 	//grid->createBufferPoints(VAOs[Grid]);
 
-	//gridLines = new Mesh();
+	gridLines = new Mesh();
 	//gridLines->createGrid(4, .0f, 0.5f, 0.0f, 0.5f, Zaxis, Blue);
 	//gridLines->createBuffers(VAOs[GridLines]);
 
@@ -442,7 +424,7 @@ void init()
 
 	//Mst Creation
 
-		std::cout << "Boundaries of Model Min:";
+	std::cout << "Boundaries of Model Min:";
 	std::cout << "("<< data.minX;
 	std::cout << "," << data.minY;
 	std::cout << "," << data.minZ;
@@ -455,9 +437,10 @@ void init()
 	std::cout << "," << std::endl;
 	
 
+	/*----------------------------------------------
+	//		UnOriented Normal Mesh
+	//----------------------------------------------*/
 
-	//Normal Mesh
-	normalsUO = new Mesh();
 
 	//Shift the normals to the centroids
 	for (int i = 0; i < normalsUnordered.size(); i++) {
@@ -479,10 +462,9 @@ void init()
 		std::cout << "," << vert.z;
 		std::cout << "," << std::endl;*/
 	}
-
-	normalsUO->createLines(centroidPoints, normalsUnordered);
+	normalsUO = new Mesh();
+	normalsUO->createLines(centroidPoints, normalsUnordered, Red, .5f);
 	normalsUO->createBuffers(VAOs[NormalsUO]);
-
 
 	/*----------------------------------------------
 	//		Oriented Normal Mesh
@@ -497,7 +479,7 @@ void init()
 		normalOriented.at(i).z = scaleNormal * normalOriented.at(i).z + centroidPoints.at(i).z;
 	}
 
-	normalsOriented->createLines(centroidPoints, normalOriented);
+	normalsOriented->createLines(centroidPoints, normalOriented, DarkBlue,.5f );
 	normalsOriented->createBuffers(VAOs[NormalsOriented]);
 
 	/*----------------------------------------------
@@ -505,7 +487,7 @@ void init()
 	//----------------------------------------------*/
 
 	queryPointMesh = new Mesh();
-	queryPointMesh->createPoints(queryPoints, GhostWhite);
+	queryPointMesh->createPoints(queryPoints, Black);
 	queryPointMesh->createBufferPoints(VAOs[QueryVao]);
 
 	/*----------------------------------------------
@@ -521,11 +503,12 @@ void init()
 			end = nearestNeighborCount.at(i) - 1;
 		}
 		else {
-			start = end + 1;
-			end = start + nearestNeighborCount.at(i);
+			start =nearestNeighborGroupStartIndex.at(i) + 1;
+			end = start + nearestNeighborCount.at(i) - 1;
 		}
 		//printf("count:%d\n", nearestNeighborCount.at(i));
-		nearestNeighborMesh->createPointsIndices(nearestNeighbor.at(i), start, end, colors.at((i + 40) % 2));
+	
+		nearestNeighborMesh->createPointsIndices(nearestNeighbor.at(i), start, end, colors.at((i + 20) % 10));
 	}
 	//printf("count:%d\n", nearestNeighborMesh->vertices.size());
 	nearestNeighborMesh->createBuffersPointsGroups(VAOs[NearestNeighborVAO]);
@@ -535,28 +518,51 @@ void init()
 	//----------------------------------------------*/
 	
 	centroidMesh = new Mesh();
-	centroidMesh->createPoints(centroidPoints, Orange);
+	color tempColor(Orange.x, Orange.y, Orange.z, .5f);
+	centroidMesh->createPoints(centroidPoints, tempColor);
 	centroidMesh->createBufferPoints(VAOs[CentroidVAO]);
 
-	////create Triangle Mesh
-	//triangleTest = new Mesh();
+	/*----------------------------------------------
+	//		Triangle Mesh
+	//----------------------------------------------*/
+
+	//create Triangle Mesh
+	triangleTest = new Mesh();
 	//triangleTest->createTriangle(centroidPoints.at(0), centroidPoints.at(100), centroidPoints.at(200), Yellow);
 	//triangleTest->createBufferTriangle(VAOs[TriangleTest]);
 
-	
-	
+	/*----------------------------------------------
+	//		Centroid Indexed Mesh
+	//----------------------------------------------*/
+
+	indexedCentroidPoint = new Mesh();
+	color temp(Red.x, Red.y, Red.z, .5f);
+	indexedCentroidPoint->createPoints(centroidPoints, temp);
+	indexedCentroidPoint->createBufferPoints(VAOs[CentroidIndexed]);
+
+	/*----------------------------------------------
+	//		Bounding Box Mesh
+	//----------------------------------------------*/
+
 	boundingBoxMesh = new Mesh();
 	boundingBoxMesh->createBoundingBox(scaleFactor *data.minX, scaleFactor * data.maxX, scaleFactor *data.minY, scaleFactor* data.maxY, scaleFactor *data.minZ, scaleFactor * data.maxZ, Teal);
 	boundingBoxMesh->createBuffers(VAOs[BoundingBoxVAO]);
 	std::cout << "Scale Factor:" << scaleFactor << std::endl;
 
+	/*----------------------------------------------
+	//		Adjacency Graph Mesh
+	//----------------------------------------------*/
+
 	adjacentMesh = new Mesh();
-	//adjacentMesh->createLines(queryPoints, CornlowerBlue, setAdjacent);
-	//adjacentMesh->createBuffers(VAOs[AdjacentVAO]);
-	
-	MST = new Mesh();
-	MST->createLines(mstGraph, queryPoints, Sienna);
-	MST->createBuffers(VAOs[MSTVao]);
+	adjacentMesh->createLines(centroidPoints, DarkGreen, setAdjacent);
+	adjacentMesh->createBuffers(VAOs[AdjacentVAO]);
+
+	/*----------------------------------------------
+	//		Mst Mesh
+	//----------------------------------------------*/
+	mstMesh = new Mesh();
+	mstMesh->createLines(mstGraph, queryPoints, Sienna);
+	mstMesh->createBuffers(VAOs[MSTVao]);
 }
 
 //----------------------------------------------
@@ -578,9 +584,8 @@ void display(int windowWidth, int windowHeight,float rotateF,float sliderF,float
 		time = manNN;
 	}
 	
-	 
 	//Clear the buffer
-	GLCall(glClearColor(SlateGray.x, SlateGray.y, SlateGray.z, 1.0f));
+	GLCall(glClearColor(1.0f, 1.0f, 1.0f, 1.0f));
 	GLCall(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 	
 	//-------------------------
@@ -603,7 +608,7 @@ void display(int windowWidth, int windowHeight,float rotateF,float sliderF,float
 	glm::mat4 modelGrid = glm::mat4(1.0f);
 	modelGrid = glm::scale(modelGrid, glm::vec3(scaleFactor  *  .02, scaleFactor * .02, scaleFactor * .02));
 	modelGrid = glm::translate(modelGrid, glm::vec3(0, 0, 0));
-	modelGrid = glm::rotate(modelGrid, rotateF * 5, glm::vec3(0, 1.0f, 0.1f));
+	modelGrid = glm::rotate(modelGrid, rotateF * 5, glm::vec3(1.0, 0.0f, 0.1f));
 
 	// Model matrix : an identity matrix (model will be at the origin)
 	glm::mat4 modelPoint = glm::mat4(1.0f);
@@ -611,9 +616,9 @@ void display(int windowWidth, int windowHeight,float rotateF,float sliderF,float
 	modelPoint = glm::translate(modelPoint, glm::vec3(0, 0, 0));
 	modelPoint = glm::rotate(modelPoint, rotateF *5 , glm::vec3(0, 1.0f, 0.1f));
 
-	//-------------------------
+	//-------------------------------------------------------
 	//     Activate Shader
-	//------------------------
+	//-------------------------------------------------------
 	
 	basicShaderProgram->Use();
 	//---------------Link Matrices to Basic Shader--------------------------------
@@ -636,28 +641,40 @@ void display(int windowWidth, int windowHeight,float rotateF,float sliderF,float
 	}
 	*/
 	
-	centroidMesh->drawPoints();
+	
 	//if(nearestNeighborAnimate)
-	nearestNeighborMesh->drawPointGroups(time, nearestNeighborMesh->indices.size(), nearestNeighborCount, NNGroupStartIndex, speed);
+	//nearestNeighborMesh->drawPointGroups(time, nearestNeighborMesh->indices.size(), nearestNeighborCount, nearestNeighborGroupStartIndex, speed);
 	//pointCloud->drawPoints();
-	//queryPointMesh->drawPoints();
+	
 	//gridLines->drawLines(0, 0, 0);
 
 	//Transparent Objects must be drawn last
 	//triangleTest->drawTriangle();
+	if(centroids){
+		centroidMesh->drawPoints();
+		}
+	if(query){
+		queryPointMesh->drawPoints();
+	}
 	if (graphAnimated) {
 		adjacentMesh->drawLinesSequenceGraph(time, adjacentMesh->getNumIndices());
 	}
 	if (graphStatic) {
-		adjacentMesh->drawLines(0, 0, 0);
+		adjacentMesh->drawLines();
 	}
+	if (nearestNeighborStatic) {
+		nearestNeighborMesh->drawPointGroups(time, nearestNeighborMesh->indices.size(), nearestNeighborCount, nearestNeighborGroupStartIndex, speed);
+	}
+		mstMesh->drawLinesSequenceGraph(time, mstMesh->getNumIndices());
+
+	//indexedCentroidPoint->drawIndexedPoint();
+	//---------Transparent Objects----------------
 	if (norm) {
-		normalsUO->drawLines(0, 0, 0);
+		normalsUO->drawLines();
 	}
 	if (orientNorm) {
-		normalsOriented->drawLinesIndexed();
+		normalsOriented->drawLines();
 	}
-	MST->drawLinesSequenceGraph(time, MST->getNumIndices());
 
 	//---------------Link Matrices to Point Shader--------------------------------
 	pointShaderProgram->Use();
@@ -903,6 +920,7 @@ void KeyMovement()
 }
 
 
+
 //----------------------------------------------------
 // Main entry point
 // Manages all OpenGL draw calls and main loop
@@ -928,12 +946,12 @@ int main()
 	std::cout << "summed:" << summed << std::endl;
 	std::cout << "dot product:" << dotproduct << std::endl;*/
 
-	globals::radius = 1.0f;
-	globals::cubeEdge = .1f;
-	globals::filename = "cube.obj";
+	globals::radius = 10.0f;
+	globals::cubeEdge = 2.0f;
+	globals::filename = "red_pepper_down.obj";
 	globals::outputFilename = "outputMesh.obj";
-	scaleNormal = 10.0f;
-	scaleConst = 15.0f;
+	scaleNormal = 20.0f;
+	scaleConst = 20.0f;
 	
 
 	bool result = do_magic(data); // here is where the magic happens!
@@ -965,7 +983,7 @@ int main()
 
 	// make context
 	glfwMakeContextCurrent(window);
-
+	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	
 	//Gui Set up
 	const char* glsl_version = "#version 130";
@@ -1048,8 +1066,8 @@ int main()
 				if (ImGui::Button("Toggle auto/manual nearest neighbors"))
 					manBool = !manBool; 
 				ImGui::Text("Slider for manual nearest neighbors progression");
-				ImGui::SliderFloat("4", &manNN,0.0f,nearestNeighborCount.size());
-				nnIndex = static_cast<unsigned int>(find_Mod(manNN, nearestNeighborCount.size()));
+				ImGui::SliderFloat("4", &manNN,0.0f,queryPoints.size()-1);
+				nnIndex = static_cast<unsigned int>(manNN);
 
 				//ImGui::Text("Slider for speed of manual nearest neighbors progression");
 				//ImGui::SliderFloat("2", &sliderF, 0.0f, 4.0f);
@@ -1075,6 +1093,12 @@ int main()
 				//ImGui::Text("counter = %d", counter);
 				 
 				//ImGui::Checkbox("Normals", &normBool);
+				if (ImGui::Button("Toggle Query Point"))
+					query = !query;
+				if (ImGui::Button("Toggle Centroid Points"))
+					centroids = !centroids;
+				if (ImGui::Button("Nearest Neighbor Groups Static"))
+					nearestNeighborStatic = !nearestNeighborStatic;
 				if (ImGui::Button("Un-oriented normals on/off"))
 					normBool = true;
 				// gotta reset the bool right after the norm is set or else it will spaz out 
@@ -1090,6 +1114,7 @@ int main()
 					orientNorm = !orientNorm;
 					normBool1 = !normBool1;
 				}
+				
 				if (ImGui::Button("Toggle Static Graph"))
 					graphStatic = !graphStatic;
 				if (ImGui::Button("Toggle Animated Graph"))
@@ -1143,8 +1168,8 @@ int main()
 				ImGui::Text("The nearest neighbors of the current point:");
 				for (int i = 0; i < nnlist.size(); i++) {
 					//ImGui::Text("The current point's current nearest neighbor is at:");
-					ImGui::Text("%f: ", i); ImGui::SameLine();
-					ImGui::Text("%f, %f, %f",nnlist.at(i).x, nnlist.at(i).y, nnlist.at(i).z);
+					ImGui::Text("Index(%d): ", i); ImGui::SameLine();
+					ImGui::Text("(%f, %f, %f)",nnlist.at(i).x, nnlist.at(i).y, nnlist.at(i).z);
 					//if (i%3!=0 && i>0)
 						//ImGui::SameLine();
 
