@@ -37,8 +37,11 @@ struct custom_comparator {
 enum Axis { Xaxis, Yaxis, Zaxis };
 static int delay = 0;
 static int graphIndex = 0;
+static int graphIndexMan = 0;
 int oldDelay;
 static int nnIndex = 0;
+
+
 
 //----------------------------------------------
 //		Error Wrapper
@@ -167,6 +170,18 @@ struct Vertex {
 		return temp;
 	}
 };
+
+
+
+float distance3D(Vertex p1, Vertex p2)
+{
+	float a = p1.x - p2.x;
+	float b = p1.y - p2.y;
+	float c = p1.z - p2.z;
+
+	return abs(sqrt(a * a + b * b + c * c));
+}
+
 
 //----------------------------------------------
 // Custom Face Class
@@ -353,7 +368,8 @@ public:
 	void drawLinesSequenceGraph(float time, int modFactor)
 	{
 		//Rendering sequenced
-		graphIndex = static_cast<unsigned int>(find_Mod(time * 200, modFactor));
+		//graphIndex = static_cast<unsigned int>(find_Mod(time * 200, modFactor));
+		graphIndex = static_cast<unsigned int>(find_Mod(graphIndexMan, modFactor));
 		//std::cout << delay << std::endl;
 		//oldDelay != delay ? delay = delay + 1 : oldDelay = delay;
 		GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_vbo_indices));
@@ -464,6 +480,22 @@ public:
 			vertices.push_back(direction.at(i));
 			setIndices(2*i,2*i+1);
 		}
+	}
+
+	//Create Lines gives list of origin vertices and direction vector
+	void createLines(std::vector<std::pair<int,int>> pointPair, std::vector<Vertex> queryPoints, color color)
+	{
+		//vertices.push_back(Vertex(0.0f, 0.0f, 0.0f, BlueViolet));
+		for (int i = 0; i < pointPair.size() ; i++) {
+			if(i == 255)
+				std::cout << "";
+			if (pointPair.at(i).first > 0 && pointPair.at(i).second > 0) {
+				vertices.push_back(Vertex(queryPoints.at(pointPair.at(i).first), color));
+				vertices.push_back(Vertex(queryPoints.at(pointPair.at(i).second), color));
+				setIndices(pointPair.at(i).first, pointPair.at(i).second);
+			}
+		}
+		std::cout << "";
 	}
 
 	//Create points with a vertex list and a color
@@ -580,6 +612,8 @@ public:
 	{
 		return sqrt(pow((x2 - x1), 2));
 	}
+
+	
 
 	//Create an X,Y, or Z aligned 2d grid with a certain amount of divisions, color
 	//Left, right and Top, Bottom determine position and size of grid

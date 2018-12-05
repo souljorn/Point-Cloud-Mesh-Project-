@@ -306,7 +306,8 @@ bool do_magic(OutData& outData)
 #endif
 	
 	outData.rGraph = graph;
-
+	outData.graphMst = graphMst;
+	outData.mstRootIdx = mstRootIdx;
 
 
 

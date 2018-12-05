@@ -44,7 +44,9 @@ double find_Mod(double a, double b);
 
 enum VAO_IDs { PointCloud, Lines, Grid, GridLines,
 	XYPlane, NormalsUO, QueryVao, NearestNeighborVAO, CentroidVAO,
-	NormalsOriented, TriangleTest, BoundingBoxVAO, AdjacentVAO, NumVAOs };
+	NormalsOriented, TriangleTest, BoundingBoxVAO, AdjacentVAO,
+	MSTVao, NumVAOs };
+
 GLuint  VAOs[NumVAOs];
 
 //Shader pointers
@@ -69,6 +71,7 @@ Mesh * normalsOriented;
 Mesh * triangleTest;
 Mesh * adjacentMesh;
 Mesh * boundingBoxMesh;
+Mesh * MST;
 
 
 //----------------------------------------------
@@ -110,11 +113,13 @@ std::vector<int> tagData;
 std::vector<unsigned int> nearestNeighborCount;
 std::vector<unsigned int> NNGroupStartIndex;
 std::set<std::pair<int, int>, custom_comparator> setAdjacent;
+std::vector<std::pair<int, int>> mstGraph;
 
 bool norm = false;	//Norms on off boolean
-int speed = 8; //Used to speed up the NN-Animation with the O/P key
+int speed = .05; //Used to speed up the NN-Animation with the O/P key
 float nearPlane = .10f;
 float farPlane = 50.0f;
+int index = 0;
 
 double scaleFactor;
 
@@ -137,7 +142,7 @@ int windowLength = 1400;
 //----------------------------------------------
 float fov = 50.0f;
 float aspect = (float)windowLength / (float)windowHeight;
-unsigned int index = 0;
+
 
 //----------------------------------------------
 // camera 
@@ -245,7 +250,76 @@ void parseData()
 			}
 		}  
 	}
-	std::cout << setAdjacent.size() << std::endl;
+	for (int i = 0; i < data.nPoints; i++) {
+
+		//Nearest Neighbor
+		rows = data.kdTreeData.at(i).neighbors.rows();
+		std::vector<Vertex> temp;
+		for (int j = 0; j < rows; j++)
+		{
+			temp.push_back(Vertex(data.kdTreeData.at(i).neighbors[j][0],
+				data.kdTreeData.at(i).neighbors[j][1], data.kdTreeData.at(i).neighbors[j][2], Red));
+		}
+		//Nerest neighbor points and group size
+		nearestNeighbor.push_back(temp);
+		nearestNeighborCount.push_back(rows);
+		NNGroupStartIndex.push_back(rows + NNGroupStartIndex.at(i));
+		//std::cout << "Start Numbers::" << NNGroupStartIndex.back() << std::endl;
+
+		//Get norms
+		norm = data.kdTreeData.at(i).normal.getcontent();
+		normOriented = data.kdTreeData.at(i).normalOriented.getcontent();
+
+
+		normalsUnordered.push_back(Vertex((float)norm[0], (float)norm[1], (float)norm[2], Violet));
+		normalOriented.push_back(Vertex((float)normOriented[0], (float)normOriented[1], (float)normOriented[2], Green));
+
+
+
+		//Centroid
+		centroid = data.kdTreeData.at(i).centroid.getcontent();
+		centroidPoints.push_back(Vertex(centroid[0], centroid[1], centroid[2], Orange));
+
+		//CentroidTag
+		tag = data.kdTreeData.at(i).tagsCentroids.getcontent();
+		tagData.push_back(tag[0]);
+	}
+	//Query Points
+	//Create MST Lines
+	int root = data.mstRootIdx;
+	for (int i = 0; i < data.nPoints; i++)
+	{
+		qp = data.kdTreeData.at(i).queryPoint.getcontent();
+		queryPoints.push_back(Vertex((float)qp[0], (float)qp[1], (float)qp[2], Violet));
+	}
+
+	for (int i = 0; i < data.nPoints; i++)
+	{
+		if ( i != root ) {
+		
+				mstGraph.push_back(std::make_pair(i, data.graphMst[i]));
+
+				Vertex p1(centroidPoints.at(i));
+				Vertex p2(centroidPoints.at(data.graphMst[i]));
+
+			
+				std::cout << "p1:";
+				std::cout << "(" << p1.x;
+				std::cout << "," << p1.y;
+				std::cout << "," << p1.z;
+				std::cout << "," << "p2:";
+				std::cout << "(" << p2.x;
+				std::cout << "," << p2.y;
+				std::cout << "," << p2.z;
+				std::cout << ")";
+				std::cout << " >> distance " << distance3D(p1, p2) << std::endl;
+					
+		}
+	}
+	
+	std::cout << "graphMST" << mstGraph.size() << std::endl;
+	std::cout << "Adjacent Set" << setAdjacent.size() << std::endl;
+	
 
 	for (int i = 0; i < data.nPoints ; i++) {
 		
@@ -271,9 +345,7 @@ void parseData()
 		normalsUnordered.push_back(Vertex((float)norm[0] , (float)norm[1], (float)norm[2] , Violet));
 		normalOriented.push_back(Vertex((float)normOriented[0], (float)normOriented[1], (float)normOriented[2], Green));
 		
-		//Query Points
-		qp = data.kdTreeData.at(i).queryPoint.getcontent();
-		queryPoints.push_back(Vertex((float)qp[0], (float)qp[1], (float)qp[2], Violet));
+		
 
 		//Centroid
 		centroid = data.kdTreeData.at(i).centroid.getcontent();
@@ -368,6 +440,8 @@ void init()
 	xzPlane->createGrid(16, data.minX, data.maxX, data.minZ, data.maxZ, Yaxis, DarkSlateGray);
 	xzPlane->createBuffers(VAOs[XYPlane]);
 
+	//Mst Creation
+
 		std::cout << "Boundaries of Model Min:";
 	std::cout << "("<< data.minX;
 	std::cout << "," << data.minY;
@@ -379,6 +453,8 @@ void init()
 	std::cout << "," << data.maxY;
 	std::cout << "," << data.maxZ;
 	std::cout << "," << std::endl;
+	
+
 
 	//Normal Mesh
 	normalsUO = new Mesh();
@@ -475,9 +551,12 @@ void init()
 	std::cout << "Scale Factor:" << scaleFactor << std::endl;
 
 	adjacentMesh = new Mesh();
-	adjacentMesh->createLines(queryPoints, colors.at(60), setAdjacent);
-	adjacentMesh->createBuffers(VAOs[AdjacentVAO]);
+	//adjacentMesh->createLines(queryPoints, CornlowerBlue, setAdjacent);
+	//adjacentMesh->createBuffers(VAOs[AdjacentVAO]);
 	
+	MST = new Mesh();
+	MST->createLines(mstGraph, queryPoints, Sienna);
+	MST->createBuffers(VAOs[MSTVao]);
 }
 
 //----------------------------------------------
@@ -546,7 +625,7 @@ void display(int windowWidth, int windowHeight,float rotateF,float sliderF,float
 	//----------Mesh Draw Calls for The XY PLANE/NEAREST NEIGHBOR/CENTROID/NORMALS------------------------------------
 	//gridLines->drawLinesSequence(time, gridLines->getNumIndices() + 1);
 	//grid->drawPoints();
-	xzPlane->drawLines(0, 0, 0);
+	//xzPlane->drawLines(0, 0, 0);
 	//Turn Normals on/off with N key
 	
 	/*
@@ -556,7 +635,7 @@ void display(int windowWidth, int windowHeight,float rotateF,float sliderF,float
 		// draw with slider
 	}
 	*/
-
+	
 	centroidMesh->drawPoints();
 	//if(nearestNeighborAnimate)
 	nearestNeighborMesh->drawPointGroups(time, nearestNeighborMesh->indices.size(), nearestNeighborCount, NNGroupStartIndex, speed);
@@ -578,6 +657,7 @@ void display(int windowWidth, int windowHeight,float rotateF,float sliderF,float
 	if (orientNorm) {
 		normalsOriented->drawLinesIndexed();
 	}
+	MST->drawLinesSequenceGraph(time, MST->getNumIndices());
 
 	//---------------Link Matrices to Point Shader--------------------------------
 	pointShaderProgram->Use();
@@ -585,12 +665,12 @@ void display(int windowWidth, int windowHeight,float rotateF,float sliderF,float
 	GLCall(glUniformMatrix4fv(viewIDPoint, 1, GL_FALSE, glm::value_ptr(view)));
 	GLCall(glUniformMatrix4fv(projectionIDPoint, 1, GL_FALSE, glm::value_ptr(projection)));
 	//Alpha is a float in the shader used to add jitter to the query points
-	//if (!manBool) {
+	if (!manBool) {
 		GLCall(glUniform1f(alphaBasic, ((sin(time * 150.0f) + 1) * .0005) + .995f));
-	//}
-	//else {
-		//GLCall(glUniform1f(alphaBasic, ((sin(manNN * 150.0f) + 1) * .0005) + .995f));
-	//}
+	}
+	else {
+		GLCall(glUniform1f(alphaBasic, ((sin(manNN * 150.0f) + 1) * .0005) + .995f));
+	}
 	//----------Mesh Draw Calls for The Points------------------------------------
 	
 
@@ -728,6 +808,15 @@ void KeyCallback(GLFWwindow *window, int key, int scan, int act, int mode)
 	{
 		graphAnimated = !graphAnimated;
 	}
+	if (key == GLFW_KEY_C && act == GLFW_PRESS)
+	{
+		graphIndexMan++;
+	}
+	if (key == GLFW_KEY_V && act == GLFW_PRESS)
+	{
+		graphIndexMan--;
+	}
+
 	if (key == GLFW_KEY_Z && act == GLFW_PRESS)
 	{
 		nnIndex--;
@@ -843,8 +932,8 @@ int main()
 	globals::cubeEdge = .1f;
 	globals::filename = "cube.obj";
 	globals::outputFilename = "outputMesh.obj";
-	scaleNormal = .50f;
-	scaleConst = 20.0f;
+	scaleNormal = 10.0f;
+	scaleConst = 15.0f;
 	
 
 	bool result = do_magic(data); // here is where the magic happens!
