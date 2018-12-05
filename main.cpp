@@ -449,7 +449,7 @@ void init()
 			end = start + nearestNeighborCount.at(i);
 		}
 		//printf("count:%d\n", nearestNeighborCount.at(i));
-		nearestNeighborMesh->createPointsIndices(nearestNeighbor.at(i), start, end, colors.at((i + 40) % 10));
+		nearestNeighborMesh->createPointsIndices(nearestNeighbor.at(i), start, end, colors.at((i + 40) % 2));
 	}
 	//printf("count:%d\n", nearestNeighborMesh->vertices.size());
 	nearestNeighborMesh->createBuffersPointsGroups(VAOs[NearestNeighborVAO]);
@@ -462,10 +462,10 @@ void init()
 	centroidMesh->createPoints(centroidPoints, Orange);
 	centroidMesh->createBufferPoints(VAOs[CentroidVAO]);
 
-	//create Triangle Mesh
-	triangleTest = new Mesh();
-	triangleTest->createTriangle(centroidPoints.at(0), centroidPoints.at(100), centroidPoints.at(200), Yellow);
-	triangleTest->createBufferTriangle(VAOs[TriangleTest]);
+	////create Triangle Mesh
+	//triangleTest = new Mesh();
+	//triangleTest->createTriangle(centroidPoints.at(0), centroidPoints.at(100), centroidPoints.at(200), Yellow);
+	//triangleTest->createBufferTriangle(VAOs[TriangleTest]);
 
 	
 	
@@ -477,7 +477,6 @@ void init()
 	adjacentMesh = new Mesh();
 	adjacentMesh->createLines(queryPoints, colors.at(60), setAdjacent);
 	adjacentMesh->createBuffers(VAOs[AdjacentVAO]);
-	
 	
 }
 
@@ -559,10 +558,10 @@ void display(int windowWidth, int windowHeight,float rotateF,float sliderF,float
 	*/
 
 	centroidMesh->drawPoints();
-	if(nearestNeighborAnimate)
+	//if(nearestNeighborAnimate)
 	nearestNeighborMesh->drawPointGroups(time, nearestNeighborMesh->indices.size(), nearestNeighborCount, NNGroupStartIndex, speed);
 	//pointCloud->drawPoints();
-	queryPointMesh->drawPoints();
+	//queryPointMesh->drawPoints();
 	//gridLines->drawLines(0, 0, 0);
 
 	//Transparent Objects must be drawn last
@@ -572,6 +571,12 @@ void display(int windowWidth, int windowHeight,float rotateF,float sliderF,float
 	}
 	if (graphStatic) {
 		adjacentMesh->drawLines(0, 0, 0);
+	}
+	if (norm) {
+		normalsUO->drawLines(0, 0, 0);
+	}
+	if (orientNorm) {
+		normalsOriented->drawLinesIndexed();
 	}
 
 	//---------------Link Matrices to Point Shader--------------------------------
@@ -587,12 +592,7 @@ void display(int windowWidth, int windowHeight,float rotateF,float sliderF,float
 		//GLCall(glUniform1f(alphaBasic, ((sin(manNN * 150.0f) + 1) * .0005) + .995f));
 	//}
 	//----------Mesh Draw Calls for The Points------------------------------------
-	if (norm) {
-		normalsUO->drawLines(0, 0, 0);
-	}
-	if (orientNorm) {
-		normalsOriented->drawLines(0, 0, 0);
-	}
+	
 
 	
 	//Unbind the VAO
@@ -728,6 +728,14 @@ void KeyCallback(GLFWwindow *window, int key, int scan, int act, int mode)
 	{
 		graphAnimated = !graphAnimated;
 	}
+	if (key == GLFW_KEY_Z && act == GLFW_PRESS)
+	{
+		nnIndex--;
+	}
+	if (key == GLFW_KEY_X && act == GLFW_PRESS)
+	{
+		nnIndex++;
+	}
 	
 
     //updating keys table 
@@ -831,9 +839,9 @@ int main()
 	std::cout << "summed:" << summed << std::endl;
 	std::cout << "dot product:" << dotproduct << std::endl;*/
 
-	globals::radius = .1f;
+	globals::radius = 1.0f;
 	globals::cubeEdge = .1f;
-	globals::filename = "sphereDense.obj";
+	globals::filename = "cube.obj";
 	globals::outputFilename = "outputMesh.obj";
 	scaleNormal = .50f;
 	scaleConst = 20.0f;
@@ -951,7 +959,8 @@ int main()
 				if (ImGui::Button("Toggle auto/manual nearest neighbors"))
 					manBool = !manBool; 
 				ImGui::Text("Slider for manual nearest neighbors progression");
-				ImGui::SliderFloat("4", &manNN,0.0f,100.0f);
+				ImGui::SliderFloat("4", &manNN,0.0f,nearestNeighborCount.size());
+				nnIndex = static_cast<unsigned int>(find_Mod(manNN, nearestNeighborCount.size()));
 
 				//ImGui::Text("Slider for speed of manual nearest neighbors progression");
 				//ImGui::SliderFloat("2", &sliderF, 0.0f, 4.0f);
@@ -965,8 +974,9 @@ int main()
 					speed -= 1;
 				}
 				if (speed < 0) speed =1;
-				
-				//ImGui::SliderFloat("Slider", &sliderF, 0.0f, 1.0f);
+
+
+				//ImGui::SliderFloat("SliderIndex", &sliderF, 0.0f, 1.0f);
 				
 				//ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
 
@@ -1033,7 +1043,10 @@ int main()
 				ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 				ImGui::Text("Current time: %d" ,glfwGetTime());
 				ImGui::Text("Amount of points currently being loaded: %d",data.nPoints);
+				ImGui::Text("Current query point : (%f,%f,%f)", queryPoints.at(delay).x, queryPoints.at(delay).y, queryPoints.at(delay).z);
+				ImGui::Text("Current centroid point:(%f,%f,%f)", centroidPoints.at(delay).x, centroidPoints.at(delay).y, centroidPoints.at(delay).z);
 				ImGui::Text("Current neighborhood being operating on: %d", delay);
+
 				int NNcount = nearestNeighborCount.at(delay);
 				ImGui::Text("Amount of neighbors that the %d point has: %d",delay,NNcount);
 			    std::vector<Vertex> nnlist = nearestNeighbor.at(delay);
@@ -1041,8 +1054,8 @@ int main()
 				ImGui::Text("The nearest neighbors of the current point:");
 				for (int i = 0; i < nnlist.size(); i++) {
 					//ImGui::Text("The current point's current nearest neighbor is at:");
-					ImGui::Text("%d: ", i); ImGui::SameLine();
-					ImGui::Text("%d, %d, %d",nnlist.at(i).x, nnlist.at(i).y, nnlist.at(i).z);
+					ImGui::Text("%f: ", i); ImGui::SameLine();
+					ImGui::Text("%f, %f, %f",nnlist.at(i).x, nnlist.at(i).y, nnlist.at(i).z);
 					//if (i%3!=0 && i>0)
 						//ImGui::SameLine();
 

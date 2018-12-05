@@ -38,6 +38,7 @@ enum Axis { Xaxis, Yaxis, Zaxis };
 static int delay = 0;
 static int graphIndex = 0;
 int oldDelay;
+static int nnIndex = 0;
 
 //----------------------------------------------
 //		Error Wrapper
@@ -319,6 +320,17 @@ public:
 		GLCall(glBindVertexArray(0));
 	}
 
+
+	//Draw all lines in the mesh
+	void drawLinesIndexed()
+	{
+
+		GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_vbo_indices));
+		GLCall(glBindVertexArray(m_VAO));
+		GLCall(glDrawElements(GL_LINES, 2, GL_UNSIGNED_INT, (void*)((2 * nnIndex) * sizeof(GLuint))));
+		GLCall(glBindVertexArray(0));
+	}
+
 	//Draw lines in sequence iterating through all lines in the mesh
 	void drawTriangle()
 	{
@@ -367,8 +379,10 @@ public:
 	//speed is how fast we animate contoled with the O/P key
 	void drawPointGroups(float time, int modFactor, std::vector<unsigned int> groupCount, std::vector<unsigned int> NNstartIndex, int speed)
 	{
-		delay = static_cast<unsigned int>(find_Mod(time * speed, groupCount.size() - 1));
-		
+		//delay = static_cast<unsigned int>(find_Mod(time * speed, groupCount.size() - 1));
+
+		//Prevent over flow
+		delay = nnIndex;
 		GLCall(glBindVertexArray(m_VAO));
 		GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_vbo_indices));
 		GLCall(glDrawElements(GL_POINTS, groupCount.at(delay), GL_UNSIGNED_INT, (void*)( NNstartIndex.at(delay) * sizeof(GLuint))));
