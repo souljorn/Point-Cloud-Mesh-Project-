@@ -28,11 +28,7 @@
  *Animate NN by point groups
  *Animate normals by Centroid
  *
- *
- *
  ****************************************/
-
-
 
 //Forward declarations
 class Mesh;
@@ -81,7 +77,7 @@ Mesh * indexedCentroidPoint;
 
 //Shows gui when set to true
 bool showGui = true;
-// set true to show oriented normals 
+//Set true to show oriented normals 
 bool normBool = false;
 bool autoBool = false; 
 bool manBool = false;
@@ -91,7 +87,7 @@ bool reset = false;
 bool graphStatic = false;
 bool graphAnimated = false;
 bool nearestNeighborAnimate = false;
-bool centroids = true;
+bool centroids = false;
 bool query = true;
 bool nearestNeighborStatic = false;
 bool nearestNeighborAnimated = true;
@@ -117,7 +113,7 @@ std::vector<Vertex> centroidPoints;
 std::vector<int> tagData;
 std::vector<unsigned int> nearestNeighborCount;
 std::vector<unsigned int> nearestNeighborGroupStartIndex;
-std::set<std::pair<int, int>, custom_comparator> setAdjacent;
+std::set<std::pair<unsigned int, unsigned int>, custom_comparator> setAdjacent;
 std::vector<std::pair<unsigned int,unsigned int>> mstGraph;
 
 bool norm = false;	//Norms on off boolean
@@ -317,8 +313,8 @@ void parseData()
 				//Vertex p1(centroidPoints.at(i));
 				//Vertex p2(centroidPoints.at(data.graphMst[i]));
 
-				std::cout << "(" << i;
-				std::cout << "," << data.graphMst[i] << ")" <<std::endl;
+				//std::cout << "(" << i;
+				//std::cout << "," << data.graphMst[i] << ")" <<std::endl;
 
 				/*std::cout << "p1:";
 				std::cout << "(" << p1.x;
@@ -490,6 +486,7 @@ void init()
 	//----------------------------------------------*/
 
 	queryPointMesh = new Mesh();
+	color tempColor2(Violet.x, Violet.y, Violet.z, .5f);
 	queryPointMesh->createPoints(queryPoints, Black);
 	queryPointMesh->createBufferPoints(VAOs[QueryVao]);
 
@@ -557,7 +554,7 @@ void init()
 	//----------------------------------------------*/
 
 	adjacentMesh = new Mesh();
-	adjacentMesh->createLines(centroidPoints, DarkGreen, setAdjacent);
+	adjacentMesh->createLines(queryPoints, colors.at(60), setAdjacent);
 	adjacentMesh->createBuffers(VAOs[AdjacentVAO]);
 
 	/*----------------------------------------------
@@ -580,12 +577,12 @@ void display(int windowWidth, int windowHeight,float rotateF,float sliderF,float
 	//Time for dynamic rendering/animation
 	static float time;
 
-	if (!manBool) {
+	//if (!manBool) {
 		time = glfwGetTime();
-	}
+	/*}
 	else {
 		time = manNN;
-	}
+	}*/
 	
 	//Clear the buffer
 	GLCall(glClearColor(1.0f, 1.0f, 1.0f, 1.0f));
@@ -653,36 +650,38 @@ void display(int windowWidth, int windowHeight,float rotateF,float sliderF,float
 
 	//Transparent Objects must be drawn last
 	//triangleTest->drawTriangle();
-	if(centroids){
-		centroidMesh->drawPoints();
-		}
-	if(query){
-		queryPointMesh->drawPoints();
-	}
+	
 	if (graphAnimated) {
-		adjacentMesh->drawLinesSequenceGraph(time, adjacentMesh->getNumIndices(), mstGraph);
+		
+		adjacentMesh->drawLinesSequenceGraph(time, adjacentMesh->getNumIndices());
 	}
 	if (graphStatic) {
 		adjacentMesh->drawLines();
 	}
-	if (nearestNeighborStatic) {
-		nearestNeighborMesh->drawPointGroups(time, nearestNeighborMesh->indices.size(), nearestNeighborCount, nearestNeighborGroupStartIndex, speed);
-	}
-	if (nearestNeighborAnimated) {
-		nearestNeighborMesh->drawPointGroups(time, nearestNeighborMesh->indices.size(), nearestNeighborCount, nearestNeighborGroupStartIndex, speed);
-	}
+	
 
 	///mstMesh->drawLinesSequenceGraph(time,mstMesh->getNumVertices(),mstGraph);
 
 	//indexedCentroidPoint->drawIndexedPoint();
 	//---------Transparent Objects----------------
+	if (centroids) {
+		centroidMesh->drawPoints();
+	}
+	if (query) {
+		queryPointMesh->drawPoints();
+	}
 	if (norm) {
 		normalsUO->drawLines();
 	}
 	if (orientNorm) {
 		normalsOriented->drawLines();
 	}
-
+	if (nearestNeighborStatic) {
+		nearestNeighborMesh->drawPointGroups(time, nearestNeighborMesh->indices.size(), nearestNeighborCount, nearestNeighborGroupStartIndex, speed);
+	}
+	//if (nearestNeighborAnimated) {
+	//	nearestNeighborMesh->drawPointGroupsSequenced(time, nearestNeighborMesh->indices.size(), nearestNeighborCount, nearestNeighborGroupStartIndex, speed);
+	//}
 	//---------------Link Matrices to Point Shader--------------------------------
 	pointShaderProgram->Use();
 	GLCall(glUniformMatrix4fv(modelIDPoint, 1, GL_FALSE, glm::value_ptr(modelPoint)));
@@ -953,11 +952,11 @@ int main()
 	std::cout << "summed:" << summed << std::endl;
 	std::cout << "dot product:" << dotproduct << std::endl;*/
 
-	globals::radius = 10.0f;
-	globals::cubeEdge = 2.0f;
-	globals::filename = "red_pepper_down.obj";
+	globals::radius = .40f;
+	globals::cubeEdge = 10.0f;
+	globals::filename = "CatPoints.obj";
 	globals::outputFilename = "outputMesh.obj";
-	scaleNormal = 20.0f;
+	scaleNormal = 2.0f;
 	scaleConst = 20.0f;
 	
 
@@ -1121,13 +1120,13 @@ int main()
 					orientNorm = !orientNorm;
 					normBool1 = !normBool1;
 				}
-				
+				/*if (ImGui::Button("Nearest Neighbor Animation"))
+					nearestNeighborAnimated = !nearestNeighborAnimated;*/
 				if (ImGui::Button("Toggle Static Graph"))
 					graphStatic = !graphStatic;
 				if (ImGui::Button("Toggle Animated Graph"))
 					graphAnimated = !graphAnimated;
-				if (ImGui::Button("Nearest Neighbor Animation"))
-					nearestNeighborAnimate = !nearestNeighborAnimate;
+				
 				// zooming in/out 
 				if (ImGui::Button("Zoom In"))
 					camZ -= 1.1; 
@@ -1164,13 +1163,13 @@ int main()
 				ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 				ImGui::Text("Current time: %d" ,glfwGetTime());
 				ImGui::Text("Amount of points currently being loaded: %d",data.nPoints);
-				ImGui::Text("Current query point : (%f,%f,%f)", queryPoints.at(delay).x, queryPoints.at(delay).y, queryPoints.at(delay).z);
-				ImGui::Text("Current centroid point:(%f,%f,%f)", centroidPoints.at(delay).x, centroidPoints.at(delay).y, centroidPoints.at(delay).z);
-				ImGui::Text("Current neighborhood being operating on: %d", delay);
+				ImGui::Text("Current query point : (%f,%f,%f)", queryPoints.at(nnIndex).x, queryPoints.at(nnIndex).y, queryPoints.at(nnIndex).z);
+				ImGui::Text("Current centroid point:(%f,%f,%f)", centroidPoints.at(nnIndex).x, centroidPoints.at(nnIndex).y, centroidPoints.at(nnIndex).z);
+				ImGui::Text("Current neighborhood being operating on: %d", nnIndex);
 
-				int NNcount = nearestNeighborCount.at(delay);
-				ImGui::Text("Amount of neighbors that the %d point has: %d",delay,NNcount);
-			    std::vector<Vertex> nnlist = nearestNeighbor.at(delay);
+				int NNcount = nearestNeighborCount.at(nnIndex);
+				ImGui::Text("Amount of neighbors that the %d point has: %d",nnIndex,NNcount);
+			    std::vector<Vertex> nnlist = nearestNeighbor.at(nnIndex);
 
 				ImGui::Text("The nearest neighbors of the current point:");
 				for (int i = 0; i < nnlist.size(); i++) {
