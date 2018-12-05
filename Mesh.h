@@ -365,16 +365,16 @@ public:
 	}
 
 	//Draw lines in sequence iterating through all lines in the mesh
-	void drawLinesSequenceGraph(float time, int modFactor)
+	void drawLinesSequenceGraph(float time, int modFactor, std::vector<std::pair<unsigned int, unsigned int>> pairs)
 	{
 		//Rendering sequenced
-		//graphIndex = static_cast<unsigned int>(find_Mod(time * 200, modFactor));
-		graphIndex = static_cast<unsigned int>(find_Mod(graphIndexMan, modFactor));
+		graphIndex = static_cast<unsigned int>(find_Mod(time * 20, modFactor));
+		//graphIndex = static_cast<unsigned int>(find_Mod(graphIndexMan, modFactor));
 		//std::cout << delay << std::endl;
 		//oldDelay != delay ? delay = delay + 1 : oldDelay = delay;
 		GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_vbo_indices));
 		GLCall(glBindVertexArray(m_VAO));
-		GLCall(glDrawElements(GL_LINES, graphIndex, GL_UNSIGNED_INT, (void*)0));
+		GLCall(glDrawElements(GL_LINES, pairs.at(graphIndex).second , GL_UNSIGNED_INT, (void*)(graphIndex * sizeof(GLuint))));
 		GLCall(glBindVertexArray(0));
 		
 	}
@@ -409,9 +409,22 @@ public:
 		delay = nnIndex;
 		GLCall(glBindVertexArray(m_VAO));
 		GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_vbo_indices));
-		GLCall(glDrawElements(GL_POINTS, groupCount.at(delay), GL_UNSIGNED_INT, (void*)( NNstartIndex.at(delay) * sizeof(GLuint))));
+		GLCall(glDrawElements(GL_POINTS, groupCount.at(delay) - 1, GL_UNSIGNED_INT, (void*)( NNstartIndex.at(delay) * sizeof(GLuint))));
 		GLCall(glBindVertexArray(0));
 		
+	}
+
+	void drawPointGroupsSequenced(float time, int modFactor, std::vector<unsigned int> groupCount, std::vector<unsigned int> NNstartIndex, int speed)
+	{
+		delay = static_cast<unsigned int>(find_Mod(time * speed, groupCount.size()));
+
+		//Prevent over flow
+	
+		GLCall(glBindVertexArray(m_VAO));
+		GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_vbo_indices));
+		GLCall(glDrawElements(GL_POINTS, groupCount.at(delay), GL_UNSIGNED_INT, (void*)(NNstartIndex.at(delay) * sizeof(GLuint))));
+		GLCall(glBindVertexArray(0));
+
 	}
 
 	//Set indices of faces
@@ -490,7 +503,7 @@ public:
 	}
 
 	//Create Lines gives list of origin vertices and direction vector
-	void createLines(std::vector<std::pair<int,int>> pointPair, std::vector<Vertex> queryPoints, color color)
+	void createLines(std::vector<std::pair<unsigned int,unsigned int>> pointPair, std::vector<Vertex> queryPoints, color color)
 	{
 		//vertices.push_back(Vertex(0.0f, 0.0f, 0.0f, BlueViolet));
 		for (int i = 0; i < pointPair.size() ; i++) {

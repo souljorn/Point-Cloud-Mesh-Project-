@@ -94,7 +94,7 @@ bool nearestNeighborAnimate = false;
 bool centroids = true;
 bool query = true;
 bool nearestNeighborStatic = false;
-
+bool nearestNeighborAnimated = true;
 
 double scaleNormal;
 double scaleConst;
@@ -118,7 +118,7 @@ std::vector<int> tagData;
 std::vector<unsigned int> nearestNeighborCount;
 std::vector<unsigned int> nearestNeighborGroupStartIndex;
 std::set<std::pair<int, int>, custom_comparator> setAdjacent;
-std::vector<std::pair<int, int>> mstGraph;
+std::vector<std::pair<unsigned int,unsigned int>> mstGraph;
 
 bool norm = false;	//Norms on off boolean
 int speed = .05; //Used to speed up the NN-Animation with the O/P key
@@ -313,11 +313,13 @@ void parseData()
 		if ( i != root ) {
 		
 				mstGraph.push_back(std::make_pair(i, data.graphMst[i]));
+				
+				//Vertex p1(centroidPoints.at(i));
+				//Vertex p2(centroidPoints.at(data.graphMst[i]));
 
-				Vertex p1(centroidPoints.at(i));
-				Vertex p2(centroidPoints.at(data.graphMst[i]));
+				std::cout << "(" << i;
+				std::cout << "," << data.graphMst[i] << ")" <<std::endl;
 
-			
 				/*std::cout << "p1:";
 				std::cout << "(" << p1.x;
 				std::cout << "," << p1.y;
@@ -331,6 +333,7 @@ void parseData()
 					
 		}
 	}
+
 	
 	std::cout << "graphMST" << mstGraph.size() << std::endl;
 	std::cout << "Adjacent Set" << setAdjacent.size() << std::endl;
@@ -561,9 +564,9 @@ void init()
 	//		Mst Mesh
 	//----------------------------------------------*/
 	mstMesh = new Mesh();
-	mstMesh->createLines(mstGraph, queryPoints, Sienna);
+	mstMesh->createLines(mstGraph, centroidPoints, Sienna);
 	mstMesh->createBuffers(VAOs[MSTVao]);
-}
+}	
 
 //----------------------------------------------
 // display function
@@ -657,7 +660,7 @@ void display(int windowWidth, int windowHeight,float rotateF,float sliderF,float
 		queryPointMesh->drawPoints();
 	}
 	if (graphAnimated) {
-		adjacentMesh->drawLinesSequenceGraph(time, adjacentMesh->getNumIndices());
+		adjacentMesh->drawLinesSequenceGraph(time, adjacentMesh->getNumIndices(), mstGraph);
 	}
 	if (graphStatic) {
 		adjacentMesh->drawLines();
@@ -665,7 +668,11 @@ void display(int windowWidth, int windowHeight,float rotateF,float sliderF,float
 	if (nearestNeighborStatic) {
 		nearestNeighborMesh->drawPointGroups(time, nearestNeighborMesh->indices.size(), nearestNeighborCount, nearestNeighborGroupStartIndex, speed);
 	}
-		mstMesh->drawLinesSequenceGraph(time, mstMesh->getNumIndices());
+	if (nearestNeighborAnimated) {
+		nearestNeighborMesh->drawPointGroups(time, nearestNeighborMesh->indices.size(), nearestNeighborCount, nearestNeighborGroupStartIndex, speed);
+	}
+
+	///mstMesh->drawLinesSequenceGraph(time,mstMesh->getNumVertices(),mstGraph);
 
 	//indexedCentroidPoint->drawIndexedPoint();
 	//---------Transparent Objects----------------
