@@ -188,7 +188,7 @@ bool firstMouse = true;
 // Display
 //----------------------------------------------
 // continually draws the scene
-void display(int windowWidth, int windowHeight, float rotateF,float sliderF);
+void display(int windowWidth, int windowHeight, float rotateF,float sliderF, static float rotateX, static float rotateY, static float rotateZ );
 
 //----------------------------------------------
 // Clean UP Resources
@@ -571,7 +571,7 @@ void init()
 //----------------------------------------------
 // display function
 //-----------------------------------------------
-void display(int windowWidth, int windowHeight,float rotateF,float sliderF,float manNN)
+void display(int windowWidth, int windowHeight,float rotateF,float sliderF,float manNN, static float rotateX, static float rotateY, static float rotateZ)
 {	
 	//Camera variables (not used currently)
     float ratio = (float)windowHeight/windowWidth;
@@ -611,13 +611,19 @@ void display(int windowWidth, int windowHeight,float rotateF,float sliderF,float
 	glm::mat4 modelGrid = glm::mat4(1.0f);
 	modelGrid = glm::scale(modelGrid, glm::vec3(scaleFactor  *  .02, scaleFactor * .02, scaleFactor * .02));
 	modelGrid = glm::translate(modelGrid, glm::vec3(0, 0, 0));
-	modelGrid = glm::rotate(modelGrid, rotateF * 5, glm::vec3(1.0, 0.0f, 0.1f));
+
+	modelGrid = glm::rotate(modelGrid, rotateX * 5, glm::vec3(1.0f, 0.0f, 0.0f));
+
+	modelGrid = glm::rotate(modelGrid, rotateY * 5, glm::vec3(0.0f, 1.0f, 0.0f));
+
+	modelGrid = glm::rotate(modelGrid, rotateZ * 5, glm::vec3(0.0f, 0.0f, 1.0f));
+
 
 	// Model matrix : an identity matrix (model will be at the origin)
 	glm::mat4 modelPoint = glm::mat4(1.0f);
 	modelPoint = glm::scale(modelPoint, glm::vec3(scaleFactor  *  .02, scaleFactor * .02, scaleFactor * .02));
 	modelPoint = glm::translate(modelPoint, glm::vec3(0, 0, 0));
-	modelPoint = glm::rotate(modelPoint, rotateF *5 , glm::vec3(0, 1.0f, 0.1f));
+	modelPoint = glm::rotate(modelPoint, rotateF * 5 , glm::vec3(0, 1.0f, 0.1f));
 
 	//-------------------------------------------------------
 	//     Activate Shader
@@ -1064,6 +1070,11 @@ int main()
 				static float manNN = 0.0f;
 				static int counter = 0;
 
+				static float rotateX = 0;
+				static float rotateY = 0;
+				static float rotateZ = 0;
+
+
 				                          
 				//ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
 				//ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
@@ -1076,6 +1087,14 @@ int main()
 				ImGui::SliderFloat("4", &manNN,0.0f,queryPoints.size()-1);
 				nnIndex = static_cast<unsigned int>(manNN);
 
+				ImGui::Text("Slider for Pitch.");
+				ImGui::SliderFloat("5", &rotateX, 0.0f, 100.0f);
+
+				ImGui::Text("Slider for Yaw.");
+				ImGui::SliderFloat("6", &rotateY, 0.0f, 100.0f);
+
+				ImGui::Text("Slider for Roll.");
+				ImGui::SliderFloat("7", &rotateZ, 0.0f, 100.0f);
 				//ImGui::Text("Slider for speed of manual nearest neighbors progression");
 				//ImGui::SliderFloat("2", &sliderF, 0.0f, 4.0f);
 				//ImGui::Text("Slider for speed of automatic nearest neighbors progression");
@@ -1193,7 +1212,7 @@ int main()
 				
 
 				// display 
-				display(widthBuff, heightBuff, f, sliderF,manNN);
+				display(widthBuff, heightBuff, f, sliderF,manNN,rotateX,rotateY,rotateZ);
 				//Gui render	
 				ImGui::Render();
 				ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
