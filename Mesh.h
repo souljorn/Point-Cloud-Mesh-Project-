@@ -12,6 +12,20 @@
 #include <set>
 #include <algorithm>
 
+
+/*------------------------------------------------------------------
+ *					Mesh Class
+ *	This contains the Mesh objects which hold the vertex and indicies data for all objects drawn.
+ *	It is also used to hold all the buffer VAO, VBO, EBO Id's in the mesh object. All the draw
+ *	calls for the ojects are also contained here.
+ *
+ ------------------------------------------------------------------*/
+
+
+ //----------------------------------------------
+ //		Globals
+ //----------------------------------------------
+
 //Definition to get error codes from openGL
 #define BUFFER_OFFSET(a) ((void*)(a))
 #define ASSERT(x) if (!(x)) __debugbreak();
@@ -28,20 +42,8 @@ struct custom_comparator {
 		return less_comparator(std::minmax(a.first, a.second),
 			std::minmax(b.first, b.second));
 	}
-
 	std::less<std::pair<int, int>> less_comparator;
 };
-//----------------------------------------------
-//		Globals
-//----------------------------------------------
-enum Axis { Xaxis, Yaxis, Zaxis };
-static int delay = 0;
-static int graphIndex = 0;
-static int graphIndexMan = 0;
-int oldDelay;
-static int nnIndex = 0;
-
-
 
 //----------------------------------------------
 //		Error Wrapper
@@ -61,7 +63,6 @@ static bool GLLogCall(const char* function, const char* file, int line)
 	}
 	return true;
 }
-
 
 // Program to find modulo of floating  
 // point numbers. 
@@ -85,6 +86,18 @@ double find_Mod(double a, double b)
 
 	return mod;
 }
+
+ /*---------------------------------------------
+ *		Global Variables
+ *
+ *---------------------------------------------*/
+	enum Axis { Xaxis, Yaxis, Zaxis };
+	static int delay = 0;
+	static int graphIndex = 0;
+	static int graphIndexMan = 0;
+	int oldDelay;
+	static int nnIndex = 0;
+
 //----------------------------------------------
 // Custom Vertex Class
 //----------------------------------------------
@@ -171,16 +184,15 @@ struct Vertex {
 	}
 };
 
-
-
-float distance3D(Vertex p1, Vertex p2)
-{
+float distance3D(Vertex p1, Vertex p2){
 	float a = p1.x - p2.x;
 	float b = p1.y - p2.y;
 	float c = p1.z - p2.z;
 
 	return abs(sqrt(a * a + b * b + c * c));
 }
+
+
 
 
 //----------------------------------------------
@@ -336,7 +348,7 @@ public:
 	}
 
 
-	//Draw all lines in the mesh
+	//Draw all lines in the mesh, only showing the current iteration
 	void drawLinesIndexed()
 	{
 
@@ -364,22 +376,17 @@ public:
 		GLCall(glBindVertexArray(0));
 	}
 
-	//Draw lines in sequence iterating through all lines in the mesh
+	//Draw lines in sequence iterating through all lines in the graph
 	void drawLinesSequenceGraph(float time, int modFactor)
 	{
 		//Rendering sequenced
 		graphIndex = static_cast<unsigned int>(find_Mod(time * 200, modFactor));
-		//std::cout << delay << std::endl;
-		//oldDelay != delay ? delay = delay + 1 : oldDelay = delay;
 		GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_vbo_indices));
 		GLCall(glBindVertexArray(m_VAO));
 		GLCall(glDrawElements(GL_LINES, graphIndex, GL_UNSIGNED_INT, (void*)0));
 		GLCall(glBindVertexArray(0));
 
 	}
-
-	
-
 
 	//Draw all points in the mesh
 	void drawPoints()
@@ -397,17 +404,9 @@ public:
 		GLCall(glBindVertexArray(0));
 	}
 
-	//Draw Points in a mesh in in a sequence
-	//time is passed from display funciton
-	//modfactor is the size of all the indicies so overflow does not occur, rolls over to the beginning of indices
-	//group count is a vector of number of points in each group of nearest neighbors 
-	//speed is how fast we animate contoled with the O/P key
+	
 	void drawPointGroups(float time, int modFactor, std::vector<unsigned int> groupCount, std::vector<unsigned int> NNstartIndex, int speed)
-	{
-		//delay = static_cast<unsigned int>(find_Mod(time * speed, groupCount.size() - 1));
-
-		//Prevent over flow
-		
+	{	
 		GLCall(glBindVertexArray(m_VAO));
 		GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_vbo_indices));
 		GLCall(glDrawElements(GL_POINTS, groupCount.at(nnIndex) - 1, GL_UNSIGNED_INT, (void*)( NNstartIndex.at(nnIndex) * sizeof(GLuint))));
@@ -415,12 +414,15 @@ public:
 		
 	}
 
+	//Draw Points in a mesh in in a sequence
+	//time is passed from display funciton
+	//modfactor is the size of all the indicies so overflow does not occur, rolls over to the beginning of indices
+	//group count is a vector of number of points in each group of nearest neighbors 
 	void drawPointGroupsSequenced(float time, int modFactor, std::vector<unsigned int> groupCount, std::vector<unsigned int> NNstartIndex, int speed)
 	{
 		delay = static_cast<unsigned int>(find_Mod(time * speed, groupCount.size()));
 
 		//Prevent over flow
-	
 		GLCall(glBindVertexArray(m_VAO));
 		GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_vbo_indices));
 		GLCall(glDrawElements(GL_POINTS, groupCount.at(delay), GL_UNSIGNED_INT, (void*)(NNstartIndex.at(delay) * sizeof(GLuint))));
@@ -615,28 +617,6 @@ public:
 		indices.push_back(7);
 		indices.push_back(3);
 
-
-		//Faces
-
-		//Front
-		//faces.push_back(Faces(1, 2, 0));
-		//faces.push_back(Faces(3, 0, 2));
-		//Back
-		/*faces.push_back(Faces(4, 5, 6));
-		faces.push_back(Faces(4, 6, 7));*/
-		////Left
-		//faces.push_back(Faces(1, 4, 7));
-		//faces.push_back(Faces(1, 7, 2));
-		////Right
-		//faces.push_back(Faces(5, 0, 3));
-		//faces.push_back(Faces(5, 3, 6));
-		////Top
-		//faces.push_back(Faces(3, 2, 7));
-		//faces.push_back(Faces(3, 7, 6));
-		////Bottom
-		//faces.push_back(Faces(5, 4, 1));
-		//faces.push_back(Faces(5, 1, 0));
-	
 	}
 	//Add points with out indicies
 	void addPoints(std::vector<Vertex> points, color color)
@@ -652,8 +632,6 @@ public:
 	{
 		return sqrt(pow((x2 - x1), 2));
 	}
-
-	
 
 	//Create an X,Y, or Z aligned 2d grid with a certain amount of divisions, color
 	//Left, right and Top, Bottom determine position and size of grid
