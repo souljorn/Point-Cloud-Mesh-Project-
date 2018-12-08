@@ -177,7 +177,7 @@ bool firstMouse = true;
 // Display
 //----------------------------------------------
 // continually draws the scene
-void display(int windowWidth, int windowHeight, float rotateF,float sliderF);
+void display(int windowWidth, int windowHeight, float rotateF,float sliderF, static float rotateX, static float rotateY, static float rotateZ );
 
 //----------------------------------------------
 // Clean UP Resources
@@ -543,7 +543,7 @@ void init()
 //----------------------------------------------
 // display function
 //-----------------------------------------------
-void display(int windowWidth, int windowHeight,float rotateF,float sliderF,float manNN)
+void display(int windowWidth, int windowHeight,float rotateF,float sliderF,float manNN, static float rotateX, static float rotateY, static float rotateZ)
 {	
 	//Camera variables (not used currently)
     float ratio = (float)windowHeight/windowWidth;
@@ -596,7 +596,7 @@ void display(int windowWidth, int windowHeight,float rotateF,float sliderF,float
 	glm::mat4 modelPoint = glm::mat4(1.0f);
 	modelPoint = glm::scale(modelPoint, glm::vec3(scaleFactor  *  .02, scaleFactor * .02, scaleFactor * .02));
 	modelPoint = glm::translate(modelPoint, glm::vec3(0, 0, 0));
-	modelPoint = glm::rotate(modelPoint, rotateF *5 , glm::vec3(0, 1.0f, 0.1f));
+	modelPoint = glm::rotate(modelPoint, rotateF * 5 , glm::vec3(0, 1.0f, 0.1f));
 
 	//-------------------------------------------------------
 	//     Activate Shader
@@ -1153,7 +1153,7 @@ int main()
 				ImGui::Text("Camera Z data: %f", camZ);
 				
 				// display 
-				display(widthBuff, heightBuff, f, sliderF,manNN);
+				display(widthBuff, heightBuff, f, sliderF,manNN,rotateX,rotateY,rotateZ);
 				//Gui render	
 				ImGui::Render();
 				ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
